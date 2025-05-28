@@ -11,18 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('detail_users', function (Blueprint $table) {
+        Schema::create('detail_mahasiswas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->string('nim')->unique();
-            $table->string('tempat_lahir')->nullable();
-            $table->date('tanggal_lahir')->nullable();
+            $table->string('first_name')->nullable();
+            $table->string('last_name')->nullable();
+            $table->string('tahun_masuk')->nullable(); // Gantikan tanggal lahir
             $table->string('jenis_kelamin')->nullable();
-            $table->string('alamat')->nullable();
-            $table->string('no_hp')->nullable();
+            $table->foreignId('prodi_id')->constrained('prodis');
+            $table->string('kelas')->nullable();
             $table->timestamps();
         });
-
     }
 
     /**
@@ -30,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('detail_users');
+        Schema::dropIfExists('detail_mahasiswas');
     }
 };

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('nama'); // nama matkul, misalnya "Biologi Dasar"
             $table->integer('sks'); // jumlah SKS
             $table->text('deskripsi')->nullable(); // opsional
+            $table->foreignId('prodi_id')->constrained('prodis')->onDelete('cascade');
             $table->timestamps();
         });
     }

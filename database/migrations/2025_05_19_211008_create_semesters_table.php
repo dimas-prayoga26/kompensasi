@@ -12,12 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('semesters', function (Blueprint $table) {
-             $table->id();
+            $table->id();
             $table->string('tahun_ajaran'); // contoh: 2025/2026
             $table->enum('semester', ['Ganjil', 'Genap']);
-            $table->unsignedInteger('urutan'); // contoh: semester ke-1, 2, 3...
+            $table->unsignedInteger('no_semester'); // contoh: semester ke-1, 2, 3...
+            $table->boolean('aktif')->default(false);
             $table->timestamps();
         });
+
     }
 
     /**
