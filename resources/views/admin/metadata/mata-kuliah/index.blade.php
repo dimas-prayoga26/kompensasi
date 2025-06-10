@@ -394,12 +394,11 @@
                                 selectProdi.empty().append('<option disabled selected>-- Pilih Prodi --</option>');
                                 semesterSelect.empty();
 
-                                // Cari jumlah semester dari prodi yang sesuai dengan mataKuliah.prodi_id
                                 let jumlahSemesterAktif = 6; // default
 
                                 prodiList.forEach(p => {
                                     let maxSemester = 6;
-                                    if (p.nama.toLowerCase().includes("rekayasa perangkat lunak")) {
+                                    if (p.nama.toLowerCase().includes("Rekayasa Perangkat Lunak")) {
                                         maxSemester = 8;
                                     }
 

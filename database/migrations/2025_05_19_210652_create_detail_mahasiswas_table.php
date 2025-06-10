@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('first_name')->nullable();
             $table->string('last_name')->nullable();
-            $table->string('tahun_masuk')->nullable(); // Gantikan tanggal lahir
-            $table->string('jenis_kelamin')->nullable();
+            $table->year('tahun_masuk')->nullable();
+            $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan'])->nullable();
             $table->foreignId('prodi_id')->constrained('prodis');
             $table->string('kelas')->nullable();
             $table->timestamps();

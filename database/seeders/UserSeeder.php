@@ -3,9 +3,11 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Kelas;
 use App\Models\Prodi;
 use App\Models\DetailUser;
 use App\Models\DetailDosen;
+use Illuminate\Support\Str;
 use App\Models\DetailMahasiswa;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
@@ -16,7 +18,7 @@ class UserSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run()
+    public function run(): void
     {
         // Step 1: Buat Role menggunakan Spatie
         $roles = ['superAdmin', 'Dosen', 'Mahasiswa'];
@@ -65,14 +67,14 @@ class UserSeeder extends Seeder
             }
         }
 
+        // Data Prodi dan Mahasiswa
         $prodis = [
-            ['kode' => '03', 'nama' => 'Informatika', 'lama_studi' => 3, 'prefix' => 'TI1'],
-            ['kode' => '04', 'nama' => 'Rekayasa Perangkat Lunak', 'lama_studi' => 4, 'prefix' => 'RPL1'],
+            ['kode' => '03', 'nama' => 'Informatika', 'lama_studi' => 6, 'prefix' => 'TI'],
+            ['kode' => '04', 'nama' => 'Rekayasa Perangkat Lunak', 'lama_studi' => 8, 'prefix' => 'RPL'],
         ];
 
-        $tahunMasukFull = '2023';
-        $tahunMasukKode = substr($tahunMasukFull, -2); // '23'
-        $jumlahMahasiswaPerProdi = 90; // 30 mahasiswa per kelas * 3 kelas (A–C)
+        $tahunSekarang = (int) date('Y');
+        $kelasList = Kelas::all();
 
         foreach ($prodis as $prodi) {
             $prodiModel = Prodi::firstOrCreate(
@@ -80,39 +82,58 @@ class UserSeeder extends Seeder
                 ['nama' => $prodi['nama'], 'lama_studi' => $prodi['lama_studi']]
             );
 
-            for ($i = 1; $i <= $jumlahMahasiswaPerProdi; $i++) {
-                $nim = $tahunMasukKode . $prodi['kode'] . str_pad($i, 3, '0', STR_PAD_LEFT);
-                $email = "mhs_{$prodi['kode']}{$i}@mail.com";
+            $kelasProdi = $kelasList->filter(function ($kelas) use ($prodi) {
+                return Str::startsWith($kelas->nama, $prodi['prefix']);
+            })->values();
 
-                $user = User::firstOrCreate(
-                    ['email' => $email],
-                    [
-                        'nim' => $nim,
-                        'nip' => null,
-                        'password' => Hash::make($nim),
-                    ]
-                );
+            if ($kelasProdi->isEmpty()) {
+                $this->command->warn("Tidak ada kelas ditemukan untuk prodi {$prodi['nama']} dengan prefix {$prodi['prefix']}");
+                continue;
+            }
 
-                $user->assignRole('Mahasiswa');
+            foreach ($kelasProdi as $kIndex => $kelas) {
+                if (!preg_match('/^(TI|RPL)(\d)[A-Z]$/', $kelas->nama, $matches)) {
+                    $this->command->warn("Format kelas salah: {$kelas->nama}");
+                    continue;
+                }
 
-                $kelasHuruf = ['A', 'B', 'C'][intval(($i - 1) / 30)]; // 1–30 → A, 31–60 → B, 61–90 → C
-                $kelas = $prodi['prefix'] . $kelasHuruf;
+                $tingkat = (int) $matches[2];
+                $tahunMasukFull = $tahunSekarang - ($tingkat - 1);
+                $tahunMasukKode = substr($tahunMasukFull, -2);
 
-                DetailMahasiswa::firstOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'first_name' => "Mhs{$i}",
-                        'last_name' => $prodi['nama'],
-                        'tahun_masuk' => $tahunMasukFull,
-                        'jenis_kelamin' => rand(0, 1) ? 'Laki-laki' : 'Perempuan',
-                        'prodi_id' => $prodiModel->id,
-                        'kelas' => $kelas,
-                    ]
-                );
+                for ($j = 1; $j <= 30; $j++) {
+                    $i = ($kIndex * 30) + $j;
+
+                    $nim = $tahunMasukKode . $prodi['kode'] . str_pad($i, 3, '0', STR_PAD_LEFT);
+                    $email = "mhs_{$prodi['kode']}{$i}@mail.com";
+
+                    $user = User::firstOrCreate(
+                        ['email' => $email],
+                        [
+                            'nim' => $nim,
+                            'nip' => null,
+                            'password' => Hash::make($nim),
+                        ]
+                    );
+
+                    $user->assignRole('Mahasiswa');
+
+                    DetailMahasiswa::firstOrCreate(
+                        ['user_id' => $user->id],
+                        [
+                            'first_name' => "Mhs{$i}",
+                            'last_name' => $prodi['nama'],
+                            'tahun_masuk' => $tahunMasukFull,
+                            'jenis_kelamin' => rand(0, 1) ? 'Laki-laki' : 'Perempuan',
+                            'prodi_id' => $prodiModel->id,
+                            'kelas' => $kelas->nama,
+                        ]
+                    );
+                }
             }
         }
 
-        // Seeder dosen (tetap)
+        // Seeder dosen
         for ($i = 1; $i <= 10; $i++) {
             $nip = '1970' . str_pad($i, 10, '0', STR_PAD_LEFT);
             $email = "dosen{$i}@mail.com";

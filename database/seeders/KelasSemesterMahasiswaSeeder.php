@@ -7,36 +7,60 @@ use App\Models\Semester;
 use App\Models\DetailMahasiswa;
 use Illuminate\Database\Seeder;
 use App\Models\KelasSemesterMahasiswa;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class KelasSemesterMahasiswaSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
-     public function run(): void
+    public function run(): void
     {
-        $mahasiswas = DetailMahasiswa::with('user')->get();
+        $mahasiswas = DetailMahasiswa::with('user', 'prodi')->get();
         $kelasList = Kelas::all();
 
+        $semesterAktif = Semester::where('aktif', true)->first();
+
+        if (!$semesterAktif) {
+            $this->command->warn('Tidak ada semester aktif!');
+            return;
+        }
+
         foreach ($mahasiswas as $mahasiswa) {
-            $tahunMasuk = (int) $mahasiswa->tahun_masuk;
-            $tahunAjaran = "{$tahunMasuk}/" . ($tahunMasuk + 1);
+            $kelas = $kelasList->firstWhere('nama', $mahasiswa->kelas);
 
-            $semester = Semester::where('tahun_ajaran', $tahunAjaran)
-                ->where('semester', 'Ganjil')
-                ->first();
-
-            $kelasRandom = $kelasList->random(); // pilih kelas secara acak
-
-            if ($semester && $kelasRandom) {
-                KelasSemesterMahasiswa::firstOrCreate([
-                    'user_id' => $mahasiswa->user_id,
-                    'no_semester' => $semester->no_semester, // ✅ pakai no_semester, bukan id
-                    'kelas_id' => $kelasRandom->id,
-                ]);
+            if (!$kelas || !preg_match('/^(TI|RPL)(\d)[A-Z]$/', $kelas->nama, $matches)) {
+                $this->command->warn("Kelas tidak valid untuk mahasiswa ID {$mahasiswa->user_id}");
+                continue;
             }
+
+            $tingkat = (int)$matches[2];
+
+            
+            // Hitung semester lokal berdasarkan tingkat kelas dan semester aktif (Ganjil/Genap)
+            $semesterLokal = ($tingkat - 1) * 2 + ($semesterAktif->semester === 'Ganjil' ? 1 : 2);
+            
+            
+            $maksimalSemester = $mahasiswa->prodi->lama_studi ?? 8;
+            if ($semesterLokal > $maksimalSemester) {
+                $semesterLokal = $maksimalSemester; // Pastikan genap/ganjil tetap sesuai dengan semester aktif
+                if (($semesterAktif->semester === 'Ganjil') && ($semesterLokal % 2 == 0)) {
+                    $semesterLokal -= 1;
+                } elseif (($semesterAktif->semester === 'Genap') && ($semesterLokal % 2 != 0)) {
+                    $semesterLokal -= 1;
+                }
+            }
+
+
+            KelasSemesterMahasiswa::updateOrCreate(
+                [
+                    'user_id' => $mahasiswa->user_id,
+                    'semester_id' => $semesterAktif->id,
+                ],
+                [
+                    'kelas_id' => $kelas->id,
+                    'semester_lokal' => $semesterLokal,
+                ]
+            );
         }
     }
-
 }

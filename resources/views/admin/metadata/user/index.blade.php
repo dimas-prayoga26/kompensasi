@@ -56,7 +56,7 @@
                                       <th>No.</th>
                                       <th>Nama</th>
                                       <th>Nim</th>
-                                      <th>Tahun Ajaran</th>
+                                      <th>Tahun Masuk</th>
                                       <th>JK</th>
                                       <th>Prodi</th>
                                       <th>Aksi</th>
@@ -220,7 +220,7 @@
 
         function replaceTableHeader(role) {
             const headers = {
-                Mahasiswa: ['No.', 'Nama', 'NIM', 'Tahun Ajaran', 'Kelas', 'Prodi', 'Aksi'],
+                Mahasiswa: ['No.', 'Nama', 'NIM', 'Tahun Masuk', 'Kelas', 'Prodi', 'Aksi'],
                 Dosen: ['No.', 'Nama', 'NIP', 'Jabatan', 'JK', 'Bidang Keahlian', 'Aksi']
             };
 

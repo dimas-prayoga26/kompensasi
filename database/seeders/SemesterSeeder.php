@@ -10,28 +10,30 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class SemesterSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run()
-{
-    $tahunMasuk = 2023;
-    $tahunAjaran = "{$tahunMasuk}/" . ($tahunMasuk + 1);
+    public function run(): void
+    {
+        $noSemester = 1;
 
-    $sudahAda = \App\Models\Semester::where('tahun_ajaran', $tahunAjaran)
-        ->where('semester', 'Ganjil')
-        ->exists();
+        for ($tahun = 2020; $tahun <= 2025; $tahun++) {
+            $tahunAjaran = "{$tahun}/" . ($tahun + 1);
 
-    if (!$sudahAda) {
-        \App\Models\Semester::create([
-            'tahun_ajaran' => $tahunAjaran,
-            'semester' => 'Ganjil',
-            'no_semester' => 1
-        ]);
+            // Ganjil
+            Semester::firstOrCreate([
+                'tahun_ajaran' => $tahunAjaran,
+                'semester'     => 'Ganjil',
+            ], [
+                'no_semester'  => $noSemester++,
+                'aktif'        => ($tahun == 2025), // misal semester terakhir dijadikan aktif
+            ]);
+
+            // Genap
+            Semester::firstOrCreate([
+                'tahun_ajaran' => $tahunAjaran,
+                'semester'     => 'Genap',
+            ], [
+                'no_semester'  => $noSemester++,
+                'aktif'        => false,
+            ]);
+        }
     }
-}
-
-
-
-
 }

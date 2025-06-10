@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Prodi;
+use App\Models\Semester;
 use App\Models\Matakuliah;
 use Illuminate\Database\Seeder;
 use App\Models\MatakuliahSemester;
@@ -56,23 +57,34 @@ class MataKuliahSeeder extends Seeder
                     ]
                 );
 
-                // Tentukan jumlah semester berdasarkan nama/kode prodi
-                $maxSemester = 8; // default
+                // Tentukan jumlah semester
+                $maxSemester = 8;
                 if (str_contains(strtolower($prodi->nama), 'informatika')) {
                     $maxSemester = 6;
-                } elseif (str_contains(strtolower($prodi->nama), 'rekayasa perangkat lunak')) {
-                    $maxSemester = 8;
                 }
 
-                // Simulasi distribusi semester berdasarkan index
                 $noSemester = ($index % $maxSemester) + 1;
 
+                // Tentukan semester ganjil/genap dan tahun ajaran default (misal 2025/2026)
+                $tahunAjaran = '2025/2026';
+                $jenisSemester = $noSemester % 2 === 1 ? 'Ganjil' : 'Genap';
+
+                $semester = Semester::firstOrCreate([
+                    'tahun_ajaran' => $tahunAjaran,
+                    'semester' => $jenisSemester,
+                    'no_semester' => $noSemester,
+                ], [
+                    'aktif' => false
+                ]);
+
+                // Hubungkan matkul ke semester yang benar
                 MatakuliahSemester::firstOrCreate([
                     'matakuliah_id' => $matakuliah->id,
-                    'no_semester' => $noSemester
+                    'semester_id' => $semester->id,
                 ]);
             }
         }
     }
+
 
 }
