@@ -249,6 +249,152 @@
             });
         });
 
+        const urlEditUser = "{{ route('kelas.show', ':id') }}";
+
+        function editData(id) {
+            const url = urlEditUser.replace(':id', id);
+
+            $.ajax({
+                url: url,
+                type: "GET",
+                success: function(response) {
+                    if (response.status === true) {
+                        const kelas = response.data;
+
+                        console.log(kelas);
+                        
+                        $('#edit_nama_kelas').val(kelas.nama);
+
+                        $('#editData').data('id', id);
+                        $('#modalEditData').modal('show');
+                        
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: 'Data tidak ditemukan.'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Terjadi Kesalahan',
+                        text: xhr.responseJSON?.message || 'Gagal memuat data.'
+                    });
+                }
+            });
+        }
+
+        $("#updateData").on("click", function(e) {
+            e.preventDefault();
+
+            let id = $("#editData").data('id');
+            // console.log(id);
+            
+            let formData = new FormData($("#editData")[0]);
+
+            let url = "{{ route('kelas.update', ':id') }}".replace(':id', id);
+
+            formData.append('_method', 'PUT');
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.status === true) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false,
+                        });
+
+                        $("#editData")[0].reset();
+                        $('#modalEditData').modal('hide');
+                        table.ajax.reload();
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Peringatan',
+                            text: response.message || 'Update gagal.',
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let message = xhr.responseJSON?.message || xhr.responseText || 'Terjadi kesalahan saat mengupdate data.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: message,
+                    });
+                }
+            });
+        });
+
+        const urlDeleteClass = "{{ route('kelas.destroy', ':id') }}";
+
+        function hapusData(id) {
+
+            const url = urlDeleteClass.replace(':id', id);
+
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url,
+                        type: "DELETE",
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            if (response.status === true) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: response.message,
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                });
+                                table.ajax.reload();
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Gagal',
+                                    text: response.message || 'Data tidak ditemukan.',
+                                    showConfirmButton: true,
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            const message = xhr.responseJSON?.message || xhr.responseText || 'Terjadi Kesalahan';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: message,
+                                showConfirmButton: true,
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
 
         </script>
 

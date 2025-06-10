@@ -17,9 +17,11 @@ return new class extends Migration
             $table->foreignId('semester_id')->constrained('semesters')->onDelete('cascade');
             $table->foreignId('kelas_id')->constrained('kelas')->onDelete('cascade');
             $table->unsignedTinyInteger('semester_lokal');
+            $table->boolean('is_active')->default(true); // Tambahan kolom
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

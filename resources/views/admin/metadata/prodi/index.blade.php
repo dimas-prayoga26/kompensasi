@@ -71,45 +71,71 @@
       </div>
     </div>
 
-    <div class="modal fade" id="modalTambahData" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalLabel">Tambah Data Dosen</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-
-      <form id="tambahData" enctype="multipart/form-data">
-        <div class="modal-body">
-
-          <div class="mb-3 mt-3">
-            <label for="nim" class="form-label" id="labelNim">NIP</label>
-            <input type="text" class="form-control" id="nim" name="nim" placeholder="Masukkan NIP">
-          </div>
-
-          <div class="mb-3 mt-3">
-            <label for="name" class="form-label" id="labelNim">Nama</label>
-            <input type="text" class="form-control" id="name" name="name" placeholder="Masukkan Nama">
-          </div>
-
-        <div class="mb-3 mt-3">
-            <label for="lama_studi" class="form-label">Lama Studi</label>
-            <input type="number" class="form-control" id="lama_studi" name="lama_studi" placeholder="Masukkan Lama Studi (tahun)">
+    <div class="modal fade" id="modalTambahData" tabindex="-1" aria-labelledby="modalTambahDataLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form id="tambahData" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tambah Program Studi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="kode_prodi" class="form-label">Kode Prodi</label>
+                            <input type="text" class="form-control" id="kode_prodi" name="kode_prodi" placeholder="Contoh: TI" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nama" class="form-label">Nama Prodi</label>
+                            <input type="text" class="form-control" id="nama" name="nama" placeholder="Contoh: Teknik Informatika" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="lama_studi" class="form-label">Lama Studi (semester)</label>
+                            <input type="number" class="form-control" id="lama_studi" name="lama_studi" placeholder="Contoh: 6 atau 8" min="1" max="14" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" id="simpanData">Simpan</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    </div>
+                </div>
+            </form>
         </div>
-
-
-        </div>
-
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary">Simpan</button>
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-        </div>
-      </form>
-
     </div>
-  </div>
-</div>
+
+    <div class="modal fade" id="modalEditData" tabindex="-1" aria-labelledby="modalEditDataLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="editData" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" id="edit_id" name="id">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalEditDataLabel">Edit Data Program Studi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="edit_kode_prodi" class="form-label">Kode Prodi</label>
+                            <input type="text" class="form-control" id="edit_kode_prodi" name="kode_prodi" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_nama_prodi" class="form-label">Nama Prodi</label>
+                            <input type="text" class="form-control" id="edit_nama_prodi" name="nama" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_lama_studi" class="form-label">Lama Studi (semester)</label>
+                            <input type="number" class="form-control" id="edit_lama_studi" name="lama_studi" min="1" max="14" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" id="updateData">Simpan Perubahan</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 
 </div>
 
@@ -184,6 +210,212 @@
                 }
             });
         });
+
+        $("#simpanData").on("click", function (e) {
+            e.preventDefault();
+
+            let formData = new FormData($("#tambahData")[0]);
+
+            $.ajax({
+                url: "{{ route('prodi.store') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (response) {
+                    if (response.status === true) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message || 'Data berhasil disimpan.',
+                            timer: 2000,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        });
+
+                        $("#tambahData")[0].reset();
+                        $('#modalTambahData').modal('hide');
+                        if (typeof table !== 'undefined') {
+                            table.ajax.reload();
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: response.message || 'Data tidak berhasil diproses.',
+                            showConfirmButton: true
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    let message = 'Terjadi kesalahan saat menyimpan data.';
+                    if (xhr.responseJSON?.errors) {
+                        const errors = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                        message = errors;
+                    } else if (xhr.responseJSON?.message) {
+                        message = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: message,
+                        showConfirmButton: true
+                    });
+                }
+            });
+        });
+
+        const urlEditProdi = "{{ route('prodi.show', ':id') }}";
+
+        function editData(id) {
+            const url = urlEditProdi.replace(':id', id);
+
+            $.ajax({
+                url: url,
+                type: "GET",
+                success: function(response) {
+                    if (response.status === true) {
+                        const prodi = response.data;
+
+                        console.log(prodi);
+
+                        $('#edit_kode_prodi').val(prodi.kode_prodi);
+                        $('#edit_nama_prodi').val(prodi.nama);
+                        $('#edit_lama_studi').val(prodi.lama_studi);
+                        
+                        $('#editData').data('id', id);
+                        $('#modalEditData').modal('show');
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: 'Data tidak ditemukan.'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Terjadi Kesalahan',
+                        text: xhr.responseJSON?.message || 'Gagal memuat data.'
+                    });
+                }
+            });
+        }
+
+
+        $("#updateData").on("click", function(e) {
+            e.preventDefault();
+
+            let id = $("#editData").data('id');
+            // console.log(id);
+            
+            let formData = new FormData($("#editData")[0]);
+
+            let url = "{{ route('prodi.update', ':id') }}".replace(':id', id);
+
+            formData.append('_method', 'PUT');
+
+            $.ajax({
+                url: url,
+                type: "POST",
+                data: formData,
+                contentType: false,
+                processData: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.status === true) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false,
+                        });
+
+                        $("#editData")[0].reset();
+                        $('#modalEditData').modal('hide');
+                        table.ajax.reload();
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Peringatan',
+                            text: response.message || 'Update gagal.',
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let message = xhr.responseJSON?.message || xhr.responseText || 'Terjadi kesalahan saat mengupdate data.';
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: message,
+                    });
+                }
+            });
+        });
+
+        const urlDeleteProdi = "{{ route('prodi.destroy', ':id') }}";
+
+        function hapusData(id) {
+
+            const url = urlDeleteProdi.replace(':id', id);
+
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url,
+                        type: "DELETE",
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            if (response.status === true) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: response.message,
+                                    timer: 1500,
+                                    showConfirmButton: false,
+                                });
+                                table.ajax.reload();
+                            } else {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Gagal',
+                                    text: response.message || 'Data tidak ditemukan.',
+                                    showConfirmButton: true,
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            const message = xhr.responseJSON?.message || xhr.responseText || 'Terjadi Kesalahan';
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: message,
+                                showConfirmButton: true,
+                            });
+                        }
+                    });
+                }
+            });
+        }
 
 
         </script>

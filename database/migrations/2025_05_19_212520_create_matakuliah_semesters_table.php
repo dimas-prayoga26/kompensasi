@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('matakuliah_id')->constrained('matakuliahs')->onDelete('cascade');
             $table->foreignId('semester_id')->constrained('semesters')->onDelete('cascade');
+            $table->unsignedTinyInteger('semester_lokal')->nullable(); // tambahan
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

@@ -43,7 +43,7 @@
             <div class="d-flex justify-content-between align-items-center p-3">
                   <h5 class="mb-0">Daftar Data Semester</h5>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahData">
-                    + Tambah Data
+                    + Semester Baru
                     </button>
 
               </div>
@@ -58,7 +58,6 @@
                                       <th>Semester</th>
                                       <th>No Semester</th>
                                       <th>Status</th>
-                                      <th>Aksi</th>
                                   </tr>
                               </thead>
                               <tbody>
@@ -71,6 +70,40 @@
           </div>
       </div>
     </div>
+
+        <!-- Modal Tambah Semester -->
+    <div class="modal fade" id="modalTambahData" tabindex="-1" aria-labelledby="modalTambahDataLabel" aria-hidden="true">
+    <div class="modal-dialog">
+       <form id="tambahData" enctype="multipart/form-data">
+        @csrf
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title">Tambah Semester Baru</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+            </div>
+            <div class="modal-body">
+            <div class="mb-3">
+                <label for="tahun_ajaran" class="form-label">Tahun Ajaran</label>
+                <input type="text" class="form-control" id="tahun_ajaran" name="tahun_ajaran" placeholder="Contoh: 2025/2026" required>
+            </div>
+            <div class="mb-3">
+                <label for="semester" class="form-label">Semester</label>
+                <select name="semester" id="semester" class="form-select" required>
+                <option disabled selected>-- Pilih --</option>
+                <option value="Ganjil">Ganjil</option>
+                <option value="Genap">Genap</option>
+                </select>
+            </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="simpanData">Simpan</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+            </div>
+        </div>
+        </form>
+    </div>
+    </div>
+
 
 </div>
 
@@ -127,19 +160,6 @@
                             }
                         }
                     },
-                    {
-                        targets: 5,
-                        render: function (data, type, full, meta) {
-                            return `
-                                <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
-                                    <i class="fe fe-edit"></i> Edit
-                                </button>
-                                <button type="button" class="btn btn-danger btn-sm" onclick="hapusData(${full.id})">
-                                    <i class="fe fe-trash"></i> Hapus
-                                </button>
-                            `;
-                        }
-                    }
 
                 ],
                 columns: [
@@ -148,11 +168,68 @@
                     { data: 'semester' },
                     { data: 'no_semester' },
                     { data: 'aktif' },
-                    { data: 'id' }
                 ],
                 language: {
                     searchPlaceholder: 'Search...',
                     sSearch: ''
+                }
+            });
+        });
+
+        $("#simpanData").on("click", function (e) {
+            e.preventDefault();
+
+            let formData = new FormData($("#tambahData")[0]);
+
+            $.ajax({
+                url: "{{ route('semester.store') }}",
+                type: "POST",
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function (response) {
+                    if (response.status === true) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: response.message || 'Data berhasil disimpan.',
+                            timer: 2000,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        });
+
+                        $("#tambahData")[0].reset();
+                        $('#modalTambahData').modal('hide');
+                        if (typeof table !== 'undefined') {
+                            table.ajax.reload();
+                        }
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: response.message || 'Data tidak berhasil diproses.',
+                            showConfirmButton: true
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    let message = 'Terjadi kesalahan saat menyimpan data.';
+                    if (xhr.responseJSON?.errors) {
+                        const errors = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                        message = errors;
+                    } else if (xhr.responseJSON?.message) {
+                        message = xhr.responseJSON.message;
+                    }
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: message,
+                        showConfirmButton: true
+                    });
                 }
             });
         });

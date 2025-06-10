@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class KelasController extends Controller
 {
@@ -28,7 +29,31 @@ class KelasController extends Controller
      */
     public function store(Request $request)
     {
-        dd($request->all());
+        $request->validate([
+            'nama' => 'required|string|max:50|unique:kelas,nama',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            Kelas::create([
+                'nama' => $request->nama,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Kelas berhasil ditambahkan.'
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal menyimpan kelas: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -36,7 +61,26 @@ class KelasController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            DB::beginTransaction();
+
+            $kelas = Kelas::findOrFail($id);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'data' => $kelas
+            ]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Data kelas tidak ditemukan atau terjadi kesalahan.',
+                'error' => $th->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -52,7 +96,57 @@ class KelasController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'nama' => 'required|string|max:50|unique:kelas,nama,' . $id,
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $kelas = Kelas::findOrFail($id);
+            $kelas->update([
+                'nama' => $request->nama
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Kelas berhasil diperbarui.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal memperbarui kelas.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    public function destroy(string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            $kelas = Kelas::find($id);
+            
+            $kelas->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data kelas berhasil dihapus.'
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

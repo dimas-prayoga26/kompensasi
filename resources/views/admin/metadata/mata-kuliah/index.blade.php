@@ -376,13 +376,18 @@
                     if (response.status === true) {
                         const mataKuliah = response.data;
 
-                        // Isi form dasar
+                        console.log(mataKuliah);
+
                         $('#edit_kode').val(mataKuliah.kode);
                         $('#edit_nama').val(mataKuliah.nama);
                         $('#edit_sks').val(mataKuliah.sks);
                         $('#edit_deskripsi').val(mataKuliah.deskripsi);
 
-                        // Ambil prodi dari server
+                        const selectedSemester = mataKuliah.matakuliah_semesters.length > 0
+                            ? mataKuliah.matakuliah_semesters[0].semester_lokal
+                            : null;
+
+
                         $.ajax({
                             url: "{{ route('mataKuliah.getProdi') }}",
                             type: "GET",
@@ -394,43 +399,18 @@
                                 selectProdi.empty().append('<option disabled selected>-- Pilih Prodi --</option>');
                                 semesterSelect.empty();
 
-                                let jumlahSemesterAktif = 6; // default
-
                                 prodiList.forEach(p => {
-                                    let maxSemester = 6;
-                                    if (p.nama.toLowerCase().includes("Rekayasa Perangkat Lunak")) {
-                                        maxSemester = 8;
-                                    }
-
                                     const selected = (p.id === mataKuliah.prodi_id) ? 'selected' : '';
-                                    selectProdi.append(`<option value="${p.id}" data-max-semester="${maxSemester}" ${selected}>${p.nama}</option>`);
-
-                                    if (p.id === mataKuliah.prodi_id) {
-                                        jumlahSemesterAktif = maxSemester;
-                                    }
+                                    selectProdi.append(`<option value="${p.id}" data-max-semester="${p.lama_studi}" ${selected}>${p.nama}</option>`);
                                 });
 
-                                // Set value setelah opsi terisi
-                                selectProdi.val(mataKuliah.prodi_id);
+                                // Set prodi dan trigger change
+                                selectProdi.val(mataKuliah.prodi_id).trigger('change', [selectedSemester]);
 
-                                // Isi semester sesuai jumlah semester prodi aktif
-                                for (let i = 1; i <= jumlahSemesterAktif; i++) {
-                                    semesterSelect.append(`<option value="${i}">${i}</option>`);
-                                }
-
-                                // Ambil dan pilih semester dari data
-                                const selectedSemester = mataKuliah.matakuliah_semesters.length > 0
-                                    ? mataKuliah.matakuliah_semesters[0].no_semester
-                                    : null;
-
-                                if (selectedSemester) {
-                                    semesterSelect.val(selectedSemester);
-                                }
+                                $('#editData').data('id', id);
+                                $('#modalEditData').modal('show');
                             }
                         });
-
-                        $('#editData').data('id', id);
-                        $('#modalEditData').modal('show');
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -449,16 +429,26 @@
             });
         }
 
-        $('#edit_prodi_id').on('change', function () {
+        // Event saat prodi diganti
+        $('#edit_prodi_id').on('change', function (event, selectedSemester = null) {
             const selectedOption = $(this).find(':selected');
             const maxSemester = parseInt(selectedOption.data('max-semester'));
             const semesterSelect = $('#edit_semester');
 
             semesterSelect.empty().append('<option disabled selected>-- Pilih Semester --</option>');
+
             for (let i = 1; i <= maxSemester; i++) {
-                semesterSelect.append(`<option value="${i}">${i}</option>`);
+                const selected = (i == selectedSemester) ? 'selected' : '';
+                semesterSelect.append(`<option value="${i}" ${selected}>${i}</option>`);
+            }
+
+            if (selectedSemester) {
+                semesterSelect.val(selectedSemester);
             }
         });
+
+
+
 
         $("#updateData").on("click", function(e) {
             e.preventDefault();

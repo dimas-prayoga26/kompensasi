@@ -2,38 +2,48 @@
 
 namespace Database\Seeders;
 
-use App\Models\Prodi;
 use App\Models\Semester;
-use App\Models\DetailMahasiswa;
 use Illuminate\Database\Seeder;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class SemesterSeeder extends Seeder
 {
     public function run(): void
     {
+        $startTahun = 2020;
         $noSemester = 1;
+        $tahunGanjil = $startTahun;
 
-        for ($tahun = 2020; $tahun <= 2025; $tahun++) {
-            $tahunAjaran = "{$tahun}/" . ($tahun + 1);
+        while ($noSemester <= 11) {
+            $tahunAjaranGanjil = "{$tahunGanjil}/" . ($tahunGanjil + 1);
 
-            // Ganjil
+            // Tambah semester Ganjil
             Semester::firstOrCreate([
-                'tahun_ajaran' => $tahunAjaran,
+                'tahun_ajaran' => $tahunAjaranGanjil,
                 'semester'     => 'Ganjil',
             ], [
-                'no_semester'  => $noSemester++,
-                'aktif'        => ($tahun == 2025), // misal semester terakhir dijadikan aktif
+                'no_semester'  => $noSemester,
+                'aktif'        => ($noSemester === 11),
             ]);
+            $noSemester++;
 
-            // Genap
+            if ($noSemester > 11) break;
+
+            // Tahun ajaran Genap lompat ke tahun berikutnya
+            $tahunGenap = $tahunGanjil + 1;
+            $tahunAjaranGenap = "{$tahunGenap}/" . ($tahunGenap + 1);
+
+            // Tambah semester Genap
             Semester::firstOrCreate([
-                'tahun_ajaran' => $tahunAjaran,
+                'tahun_ajaran' => $tahunAjaranGenap,
                 'semester'     => 'Genap',
             ], [
-                'no_semester'  => $noSemester++,
+                'no_semester'  => $noSemester,
                 'aktif'        => false,
             ]);
+            $noSemester++;
+
+            // Update tahun Ganjil berikutnya
+            $tahunGanjil++;
         }
     }
 }

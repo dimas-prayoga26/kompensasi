@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kelas;
 use App\Models\Semester;
 use Illuminate\Http\Request;
+use App\Models\DetailMahasiswa;
+use Illuminate\Support\Facades\DB;
+use App\Models\KelasSemesterMahasiswa;
 
 class SemesterController extends Controller
 {
@@ -26,9 +30,95 @@ class SemesterController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'tahun_ajaran' => 'required|string',
+            'semester' => 'required|in:Ganjil,Genap',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Nonaktifkan semester sebelumnya
+            Semester::where('aktif', true)->update(['aktif' => false]);
+
+            // Tambahkan semester baru dan set aktif
+            $semesterBaru = Semester::create([
+                'tahun_ajaran' => $request->tahun_ajaran,
+                'semester' => $request->semester,
+                'no_semester' => Semester::max('no_semester') + 1,
+                'aktif' => true,
+            ]);
+
+            $semesterIdBaru = $semesterBaru->id;
+
+            $mahasiswaList = KelasSemesterMahasiswa::whereHas('semester', function ($query) {
+                $query->where('aktif', false);
+            })->get();
+
+            foreach ($mahasiswaList as $item) {
+                $semesterLokalBaru = $item->semester_lokal + 1;
+
+                $detail = DetailMahasiswa::where('user_id', $item->user_id)->first();
+                $prodi = $detail?->prodi;
+
+                if (!$prodi) {
+                    continue; // skip jika tidak ada prodi
+                }
+
+                $maxSemester = $prodi->lama_studi ?? 8;
+
+                // Cek apakah mahasiswa sudah melewati semester maksimal
+                if ($semesterLokalBaru > $maxSemester) {
+                    $item->update([
+                        'is_active' => false
+                    ]);
+                    continue;
+                }
+
+                // Cek dan buat kelas baru jika semester ganjil
+                $kelasLama = Kelas::find($item->kelas_id);
+                $kelasBaruId = $item->kelas_id;
+
+                if ($semesterBaru->semester === 'Ganjil' && $kelasLama && preg_match('/^(TI|RPL)(\d)([A-Z])$/', $kelasLama->nama, $matches)) {
+                    $prefix = $matches[1];
+                    $tingkat = (int) $matches[2] + 1;
+                    $huruf = $matches[3];
+                    $kelasBaruNama = $prefix . $tingkat . $huruf;
+
+                    $kelasBaru = Kelas::where('nama', $kelasBaruNama)->first();
+                    if ($kelasBaru) {
+                        $kelasBaruId = $kelasBaru->id;
+
+                        DetailMahasiswa::where('user_id', $item->user_id)
+                            ->update(['kelas' => $kelasBaru->nama]);
+                    }
+                }
+
+                $item->update([
+                    'semester_id' => $semesterIdBaru,
+                    'semester_lokal' => $semesterLokalBaru,
+                    'kelas_id' => $kelasBaruId,
+                    'is_active' => true,
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Semester baru berhasil ditambahkan dan data mahasiswa diperbarui.',
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal menambahkan semester baru.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -65,8 +155,10 @@ class SemesterController extends Controller
 
     public function datatable(Request $request)
     {
-        $data = Semester::get();
+        $data = Semester::orderByDesc('no_semester')->get();
 
         return datatables()->of($data)->make(true);
     }
+
+
 }

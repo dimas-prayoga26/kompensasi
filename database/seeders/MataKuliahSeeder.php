@@ -7,16 +7,21 @@ use App\Models\Semester;
 use App\Models\Matakuliah;
 use Illuminate\Database\Seeder;
 use App\Models\MatakuliahSemester;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
 class MataKuliahSeeder extends Seeder
 {
     public function run()
     {
         $prodis = Prodi::all();
+        $semesters = Semester::orderBy('no_semester')->get();
 
         if ($prodis->isEmpty()) {
             $this->command->warn('Prodi belum ada. Tambahkan data prodi terlebih dahulu.');
+            return;
+        }
+
+        if ($semesters->isEmpty()) {
+            $this->command->warn('Semester global belum ada. Jalankan SemesterSeeder terlebih dahulu.');
             return;
         }
 
@@ -57,34 +62,25 @@ class MataKuliahSeeder extends Seeder
                     ]
                 );
 
-                // Tentukan jumlah semester
-                $maxSemester = 8;
-                if (str_contains(strtolower($prodi->nama), 'informatika')) {
-                    $maxSemester = 6;
+                // Tentukan semester lokal
+                $maxSemester = $prodi->lama_studi ?? 8;
+                $semesterLokal = ($index % $maxSemester) + 1;
+
+                // Ambil semester global yang sesuai berdasarkan semester_lokal
+                $semesterGlobal = $semesters->firstWhere('no_semester', $semesterLokal);
+                if (!$semesterGlobal) {
+                    $this->command->warn("Semester global dengan no_semester {$semesterLokal} tidak ditemukan.");
+                    continue;
                 }
 
-                $noSemester = ($index % $maxSemester) + 1;
-
-                // Tentukan semester ganjil/genap dan tahun ajaran default (misal 2025/2026)
-                $tahunAjaran = '2025/2026';
-                $jenisSemester = $noSemester % 2 === 1 ? 'Ganjil' : 'Genap';
-
-                $semester = Semester::firstOrCreate([
-                    'tahun_ajaran' => $tahunAjaran,
-                    'semester' => $jenisSemester,
-                    'no_semester' => $noSemester,
-                ], [
-                    'aktif' => false
-                ]);
-
-                // Hubungkan matkul ke semester yang benar
+                // Hubungkan ke tabel pivot
                 MatakuliahSemester::firstOrCreate([
-                    'matakuliah_id' => $matakuliah->id,
-                    'semester_id' => $semester->id,
+                    'matakuliah_id'   => $matakuliah->id,
+                    'semester_id'     => $semesterGlobal->id,
+                ], [
+                    'semester_lokal'  => $semesterLokal
                 ]);
             }
         }
     }
-
-
 }

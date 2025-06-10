@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Prodi;
+use App\Models\Semester;
 use App\Models\Matakuliah;
 use Illuminate\Http\Request;
 use App\Models\MatakuliahSemester;
@@ -38,7 +39,7 @@ class MataKuliahController extends Controller
             'sks' => 'required|integer|min:1|max:6',
             'deskripsi' => 'nullable|string',
             'prodi_id' => 'required|exists:prodis,id',
-            'semester' => 'required|integer|min:1|max:14',
+            'semester' => 'required|integer|min:1|max:14', // semester lokal
         ]);
 
         try {
@@ -52,9 +53,17 @@ class MataKuliahController extends Controller
                 'prodi_id' => $request->prodi_id,
             ]);
 
+            // Ambil semester global yang aktif
+            $semesterAktif = Semester::where('aktif', true)->first();
+
+            if (!$semesterAktif) {
+                throw new \Exception('Semester aktif tidak ditemukan.');
+            }
+
             MatakuliahSemester::create([
                 'matakuliah_id' => $matakuliah->id,
-                'no_semester' => $request->semester,
+                'semester_id' => $semesterAktif->id,
+                'semester_lokal' => $request->semester,
             ]);
 
             DB::commit();
@@ -81,8 +90,12 @@ class MataKuliahController extends Controller
         try {
             DB::beginTransaction();
 
-            $matakuliah = MataKuliah::with(['prodi', 'matakuliahSemesters'])
-                            ->findOrFail($id);
+            $matakuliah = MataKuliah::with([
+                'prodi',
+                'matakuliahSemesters' => function ($query) {
+                    $query->select('id', 'matakuliah_id', 'semester_id', 'semester_lokal');
+                }
+            ])->findOrFail($id);
 
             DB::commit();
 
@@ -115,13 +128,14 @@ class MataKuliahController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // dd($request->all());
         $request->validate([
             'kode' => 'required|string|max:20',
             'nama' => 'required|string|max:255',
             'sks' => 'required|integer|min:1|max:6',
             'deskripsi' => 'nullable|string',
             'prodi_id' => 'required|exists:prodis,id',
-            'semester' => 'required|integer|min:1|max:8',
+            'semester' => 'required|integer|min:1|max:14', // lokal
         ]);
 
         try {
@@ -138,12 +152,20 @@ class MataKuliahController extends Controller
                 'prodi_id' => $request->prodi_id,
             ]);
 
+            // Ambil semester aktif
+            $semesterAktif = Semester::where('aktif', true)->first();
+            if (!$semesterAktif) {
+                throw new \Exception('Semester aktif tidak ditemukan.');
+            }
+
+            // Hapus data semester lama
             $mataKuliah->matakuliahSemesters()->delete();
 
+            // Simpan data semester baru
             $mataKuliah->matakuliahSemesters()->create([
-                'no_semester' => $request->semester
+                'semester_id' => $semesterAktif->id,
+                'semester_lokal' => $request->semester,
             ]);
-
 
             DB::commit();
 
@@ -158,7 +180,7 @@ class MataKuliahController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Terjadi kesalahan saat memperbarui data.',
-                'error' => $e->getMessage() // untuk debugging, bisa dihapus saat produksi
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -208,11 +230,12 @@ class MataKuliahController extends Controller
 
     public function getProdi(Request $request)
     {
-        $prodis = Prodi::select('id', 'nama')->orderBy('nama')->get();
+        $prodis = Prodi::select('id', 'nama', 'lama_studi')->orderBy('nama')->get();
 
         return response()->json([
             'status' => true,
             'data' => $prodis
         ]);
     }
+
 }

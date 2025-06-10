@@ -12,9 +12,21 @@ class KelasSemesterMahasiswa extends Model
     
     protected $guarded = [''];
 
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+    // app/Models/KelasSemesterMahasiswa.php
+
+    public function semester()
+    {
+        return $this->belongsTo(Semester::class);
+    }
+
 
 }
