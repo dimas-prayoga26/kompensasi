@@ -13,14 +13,17 @@ return new class extends Migration
     {
         Schema::create('kompensasis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mahasiswa_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('dosen_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('matakuliah_id')->constrained('matakuliahs')->onDelete('cascade');
-            $table->foreignId('semester_id')->constrained('semesters')->onDelete('cascade');
-            $table->integer('credit_kompensasi'); // jumlah jam/credit kompensasi
-            $table->text('keterangan')->nullable(); // contoh: “Hadir kompensasi 3 jam tugas”
+
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('dosen_matakuliah_id')->constrained('dosen_matakuliahs')->onDelete('cascade');
+            $table->integer('menit_kompensasi');
+            $table->text('keterangan')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->unsignedTinyInteger('semester_lokal');
+
             $table->timestamps();
         });
+
     }
 
     /**

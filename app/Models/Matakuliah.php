@@ -17,7 +17,7 @@ class Matakuliah extends Model
 
     public function matakuliahSemesters()
     {
-        return $this->hasMany(MatakuliahSemester::class);
+        return $this->hasOne(MatakuliahSemester::class);
     }
 
 }

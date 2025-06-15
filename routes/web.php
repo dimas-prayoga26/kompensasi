@@ -5,6 +5,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\MataKuliahController;
+use App\Http\Controllers\MatakuliahDiampuController;
 use App\Http\Controllers\ProdiController;
 use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\UserController;
@@ -57,6 +58,18 @@ Route::middleware(['web', 'auth'])->group(function () {
 
         Route::get("/prodi/datatable", [ProdiController::class, "datatable"])->name("prodi.datatable");
         Route::resource('prodi', ProdiController::class);
+
+        Route::get("/matakuliah-diampu/datatable", [MatakuliahDiampuController::class, "datatable"])->name("matakuliah-diampu.datatable");
+        Route::get('/matakuliah-diampu/dosen/select2', [MatakuliahDiampuController::class, 'select2Dosen'])->name('matakuliah-diampu.dosen.select2');
+        Route::get('/matakuliah-diampu/matakuliah/select2', [MatakuliahDiampuController::class, 'select2Matakuliah'])->name('matakuliah-diampu.matakuliah.select2');
+        Route::get('/matakuliah-diampu/kelas/select2', [MatakuliahDiampuController::class, 'select2Kelas'])->name('matakuliah-diampu.kelas.select2');
+        Route::get('/matakuliah-diampu/{id}/tahun-ajaran', [MatakuliahDiampuController::class, 'getTahunAjaranLamaBaru'])->name('matakuliah-diampu.tahun-ajaran');
+        Route::put('/matakuliah-diampu/{id}/refresh', [MatakuliahDiampuController::class, 'refreshKompensasi'])->name('matakuliah-diampu.refresh');
+        Route::get('/matakuliah-diampu/kompensasi/{id}', [MatakuliahDiampuController::class, 'show'])->name('matakuliah-diampu.kompensasi.show');
+        Route::get('/matakuliah-diampu/kompensasi/{id}/detail', [MatakuliahDiampuController::class, 'kompensasiDetail'])->name('matakuliah-diampu.kompensasi.detail');
+        Route::put('/matakuliah-diampu/kompensasi/{id}/update', [MatakuliahDiampuController::class, 'kompensasiUpdate'])->name('matakuliah-diampu.kompensasi.update');
+        Route::get("/matakuliah-diampu/kompensasi/{id}/datatable", [MatakuliahDiampuController::class, "datatableKompensasi"])->name("matakuliah-diampu.kompensasi.datatableKompensasi");
+        Route::resource('matakuliah-diampu', MatakuliahDiampuController::class);
     });
 });
 // Route::get('/', function () {

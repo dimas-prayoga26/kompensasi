@@ -35,6 +35,7 @@
 
     <link rel="stylesheet" href="assets/vendor/css/core.css" class="template-customizer-core-css" />
     <link rel="stylesheet" href="assets/vendor/css/theme-default.css" class="template-customizer-theme-css" />
+    {{-- <link rel="stylesheet" href="assets/vendor/css/core.css" /> --}}
     <link rel="stylesheet" href="assets/css/demo.css" />
 
 
@@ -86,8 +87,7 @@
 
 
 
-
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="assets/vendor/libs/jquery/jquery.js"></script>
     <script src="assets/vendor/libs/popper/popper.js"></script>
     <script src="assets/vendor/js/bootstrap.js"></script>
     <script src="assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>

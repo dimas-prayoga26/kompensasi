@@ -9,4 +9,9 @@ class MatakuliahSemester extends Model
     protected $keyType = 'string';
 
     protected $guarded = [''];
+
+    public function matakuliah()
+    {
+        return $this->belongsTo(Matakuliah::class);
+    }
 }

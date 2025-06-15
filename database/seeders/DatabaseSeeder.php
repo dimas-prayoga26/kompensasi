@@ -19,7 +19,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             SemesterSeeder::class,
             KelasSemesterMahasiswaSeeder::class,
-            MatakuliahSeeder::class
+            MatakuliahSeeder::class,
+            // KompensasiSeeder::class
         ]);
     }
 
