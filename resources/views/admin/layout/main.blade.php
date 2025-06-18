@@ -32,23 +32,22 @@
 
     <link rel="stylesheet" href="assets/vendor/fonts/boxicons.css" />
 
-
     <link rel="stylesheet" href="assets/vendor/css/core.css" class="template-customizer-core-css" />
     <link rel="stylesheet" href="assets/vendor/css/theme-default.css" class="template-customizer-theme-css" />
     {{-- <link rel="stylesheet" href="assets/vendor/css/core.css" /> --}}
     <link rel="stylesheet" href="assets/css/demo.css" />
 
-
     <link rel="stylesheet" href="assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
 
     <link rel="stylesheet" href="assets/vendor/libs/apex-charts/apex-charts.css" />
 
-
-
+    <!-- Flaticon -->
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-straight/css/uicons-regular-straight.css'>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-solid-rounded/css/uicons-solid-rounded.css'>
+    <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.6.0/uicons-bold-straight/css/uicons-bold-straight.css'>
 
     <script src="assets/vendor/js/helpers.js"></script>
-
-
 
     <script src="assets/js/config.js"></script>
 

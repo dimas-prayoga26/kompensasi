@@ -41,6 +41,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix("portal")->group(function() {
         Route::post("/logout", [DashboardController::class, "authLogout"])->name("auth.logout");
 
+        Route::get("/dashboard/datatable", [DashboardController::class, "datatable"])->name("dashboard.datatable");
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get("/user/datatable", [UserController::class, "datatable"])->name("user.datatable");
