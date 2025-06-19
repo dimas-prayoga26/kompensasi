@@ -93,6 +93,7 @@
                                       <th>Matakuliah</th>
                                       <th>Kelas</th>
                                       <th>Semester</th>
+                                      <th>Aksi Akademik</th>
                                       <th>Aksi</th>
                                   </tr>
                               </thead>
@@ -318,18 +319,30 @@
                         console.log(full);
                         
                         return `
-                            <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
-                                <i class="fe fe-edit"></i> Perbarui Data Kompensasi
-                            </button>
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="editData(${full.id})">
-                                <i class="fe fe-edit"></i> Sinkronisasi Mahasiswa Aktif
-                            </button>
-                           <a href="/portal/matakuliah-diampu/kompensasi/${full.id}" class="btn btn-info btn-sm">
-                                <i class="fe fe-eye"></i> Detail
-                            </a>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="hapusData(${full.id})">
-                                <i class="fe fe-trash"></i> Hapus
-                            </button>
+                            <div class="d-flex flex-column gap-1">
+                                <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
+                                    <i class="fe fe-edit"></i> Perbarui Data Kompen Tahun Ajaran Baru
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="editDataMahasiswaAktif(${full.id})">
+                                    <i class="fe fe-edit"></i> Perbarui Data Kompen Mahasiswa Aktif
+                                </button>
+                            </div>
+                        `;
+                    }
+                },
+                {
+                    targets: 6,
+                    render: function (data, type, full, meta) {
+                        
+                        return `
+                            <div class="d-flex flex-column gap-1">
+                            <a href="/portal/matakuliah-diampu/kompensasi/${full.id}" class="btn btn-info btn-sm">
+                                    <i class="fe fe-eye"></i> Detail
+                                </a>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="hapusData(${full.id})">
+                                    <i class="fe fe-trash"></i> Hapus
+                                </button>
+                            </div>
                         `;
                     }
                 }
@@ -340,7 +353,8 @@
                 { data: 'matakuliah_name' },
                 { data: 'kelas_name' },
                 { data: 'semester_lokal' },
-                { data: 'id' }
+                { data: null },
+                { data: 'id' },
             ],
             language: {
                 searchPlaceholder: 'Search...',
@@ -423,7 +437,6 @@
                 const tahunLama = response.tahun_ajaran_lama || '-';
                 const tahunBaru = response.tahun_ajaran_baru;
 
-                // Kalau tahun ajaran baru belum tersedia, tapi tidak ada kompensasi aktif → tetap lanjutkan
                 if (!tahunBaru && response.kompensasi_aktif_ada) {
                     Swal.fire({
                         icon: 'warning',
@@ -451,10 +464,64 @@
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                             },
                             success: function (res) {
+                                if (res.status) {
+                                    Swal.fire('Berhasil', res.message, 'success');
+                                    table.ajax.reload(null, false);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Tidak Bisa Memperbarui',
+                                        text: res.message || 'Beberapa mahasiswa mungkin tidak sesuai atau data sudah ada.'
+                                    });
+                                }
+                            },
+                            error: function (xhr) {
+                                Swal.fire('Gagal', xhr.responseJSON?.message || 'Terjadi kesalahan.', 'error');
+                            }
+                        });
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Memuat Data',
+                    text: response.message || 'Data tahun ajaran tidak tersedia atau tidak valid.'
+                    });
+            }
+        }).fail(function(xhr) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: 'Gagal memuat data tahun ajaran.'
+            });
+        });
+    }
+
+    function editDataMahasiswaAktif(id) {
+        const urlDataMahasiswaAktif = `/portal/matakuliah-diampu/mahasiswa-aktif/${id}`;
+
+        $.get(urlDataMahasiswaAktif, function(response) {
+            if (response.status) {
+
+                Swal.fire({
+                    title: 'Sinkronisasi Data Kompensasi?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Tambahkan',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: urlDataMahasiswaAktif,
+                            type: 'GET',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function(res) {
                                 Swal.fire('Berhasil', res.message, 'success');
                                 table.ajax.reload(null, false);
                             },
-                            error: function (xhr) {
+                            error: function(xhr) {
                                 Swal.fire('Gagal', xhr.responseJSON?.message || 'Terjadi kesalahan.', 'error');
                             }
                         });
@@ -467,14 +534,15 @@
                     text: response.message || 'Data tidak ditemukan.'
                 });
             }
-        }).fail(function(xhr) {
+        }).fail(function() {
             Swal.fire({
                 icon: 'error',
                 title: 'Gagal',
-                text: 'Gagal memuat data tahun ajaran.'
+                text: 'Gagal memuat data mahasiswa aktif yang belum punya kompensasi.'
             });
         });
     }
+
 
 
     const urlMatakuliahDiampu = "{{ route('matakuliah-diampu.destroy', ':id') }}";

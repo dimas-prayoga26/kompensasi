@@ -9,6 +9,7 @@ use App\Models\Semester;
 use App\Models\DetailDosen;
 use Illuminate\Http\Request;
 use App\Models\DetailMahasiswa;
+use App\Models\KelasSemesterMahasiswa;
 use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
@@ -174,7 +175,6 @@ class UserController extends Controller
 
     }
 
-
     public function update(Request $request, string $id)
     {
         try {
@@ -186,7 +186,9 @@ class UserController extends Controller
                 $request->validate([
                     'first_name' => 'required|string|max:255',
                     'last_name' => 'nullable|string|max:255',
-                    'kelas' => 'required|string|max:50',
+                    'kelas_id' => 'required|exists:kelas,id',
+                    'semester_lokal' => 'required|integer|min:1',
+                    'is_active' => 'required|boolean',
                 ]);
 
                 $detail = $user->detailMahasiswa;
@@ -194,11 +196,22 @@ class UserController extends Controller
                     throw new \Exception("Detail Mahasiswa tidak ditemukan.");
                 }
 
+                $kelas = Kelas::findOrFail($request->input('kelas_id'));
                 $detail->update([
                     'first_name' => $request->input('first_name'),
                     'last_name' => $request->input('last_name'),
-                    'kelas' => $request->input('kelas'),
+                    'kelas' => $kelas->nama,
                 ]);
+
+                KelasSemesterMahasiswa::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'kelas_id' => $request->input('kelas_id'),
+                        'semester_lokal' => $request->input('semester_lokal'),
+                        'is_active' => $request->boolean('is_active'),
+                    ]
+                );
+
             } elseif ($user->hasRole('Dosen')) {
                 $request->validate([
                     'first_name' => 'required|string|max:255',
@@ -220,6 +233,7 @@ class UserController extends Controller
                     'jabatan_fungsional' => $request->input('jabatan_fungsional'),
                     'bidang_keahlian' => $request->input('bidang_keahlian'),
                 ]);
+
             } else {
                 throw new \Exception("Role user tidak valid.");
             }
@@ -239,8 +253,6 @@ class UserController extends Controller
             ], 500);
         }
     }
-
-
 
     public function destroy(string $id)
     {

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use App\Models\DosenMatakuliah;
 use App\Models\MatakuliahSemester;
 use Illuminate\Support\Facades\DB;
+use App\Models\KelasSemesterMahasiswa;
 
 class MatakuliahDiampuController extends Controller
 {
@@ -66,11 +67,20 @@ class MatakuliahDiampuController extends Controller
 
             $semesterLokal = $matkulSemester ? $matkulSemester->semester_lokal : null;
 
-            $mahasiswaList = User::role('Mahasiswa')
+           $mahasiswaList = User::role('Mahasiswa')
                 ->whereHas('detailMahasiswa', function ($query) use ($namaKelas) {
                     $query->where('kelas', $namaKelas);
                 })
+                ->whereHas('kelasSemesterMahasiswas', function ($query) use ($semesterLokal) {
+                    $query->where('is_active', true)
+                        ->where('semester_lokal', $semesterLokal);
+                })
                 ->get();
+
+            if ($mahasiswaList->isEmpty()) {
+                throw new \Exception('Tidak ada mahasiswa aktif di semester tersebut. Semester belum berlangsung.');
+            }
+
 
             foreach ($mahasiswaList as $mahasiswa) {
                 Kompensasi::create([
@@ -82,6 +92,7 @@ class MatakuliahDiampuController extends Controller
                     'semester_lokal' => $semesterLokal,
                 ]);
             }
+
 
             DB::commit();
 
@@ -369,7 +380,7 @@ class MatakuliahDiampuController extends Controller
         DB::beginTransaction();
 
         try {
-            $dosenMatakuliah = DosenMatakuliah::with(['kelas', 'matakuliah'])->findOrFail($id);
+            $dosenMatakuliah = DosenMatakuliah::with(['kelas', 'matakuliah', 'kompensasis'])->findOrFail($id);
             $namaKelas = $dosenMatakuliah->kelas->nama;
 
             $kompensasiAktifAda = Kompensasi::where('dosen_matakuliah_id', $dosenMatakuliah->id)
@@ -379,15 +390,25 @@ class MatakuliahDiampuController extends Controller
             $matkulSemester = MatakuliahSemester::where('matakuliah_id', $dosenMatakuliah->matakuliah_id)->first();
             $semesterLokal = $matkulSemester ? $matkulSemester->semester_lokal : null;
 
+            
             if (!$kompensasiAktifAda) {
-                $mahasiswaList = User::role('Mahasiswa')
-                    ->whereHas('detailMahasiswa', function ($query) use ($namaKelas) {
-                        $query->where('kelas', $namaKelas);
-                    })->get();
+                $kelasId = $dosenMatakuliah->kelas_id;
 
-                foreach ($mahasiswaList as $mahasiswa) {
+                $mahasiswaAktif = KelasSemesterMahasiswa::where('kelas_id', $kelasId)
+                    ->where('semester_lokal', $semesterLokal)
+                    ->where('is_active', true)
+                    ->pluck('user_id');
+
+                if ($mahasiswaAktif->isEmpty()) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => 'Tidak ada mahasiswa aktif pada semester ini.'
+                    ]);
+                }
+
+                foreach ($mahasiswaAktif as $userId) {
                     Kompensasi::create([
-                        'user_id' => $mahasiswa->id,
+                        'user_id' => $userId,
                         'dosen_matakuliah_id' => $dosenMatakuliah->id,
                         'menit_kompensasi' => 0,
                         'keterangan' => null,
@@ -396,10 +417,9 @@ class MatakuliahDiampuController extends Controller
                     ]);
                 }
 
-                DB::commit();
                 return response()->json([
                     'status' => true,
-                    'message' => 'Data kompensasi berhasil dibuat untuk pertama kali.'
+                    'message' => 'Data kompensasi berhasil dibuat hanya untuk mahasiswa semester lokal ' . $semesterLokal
                 ]);
             } elseif ($kompensasiAktifAda) {
 
@@ -451,6 +471,58 @@ class MatakuliahDiampuController extends Controller
             ], 500);
         }
     }
+
+    public function editDataMahasiswaAktif($id)
+    {
+        try {
+            $dosenMatakuliah = DosenMatakuliah::with(['kelas', 'matakuliah', 'kompensasis'])->findOrFail($id);
+
+            $semesterLokal = optional($dosenMatakuliah->kompensasis->first())->semester_lokal;
+            $kelasId = $dosenMatakuliah->kelas_id;
+
+            // Mahasiswa aktif di kelas dan semester lokal
+            $mahasiswaAktif = KelasSemesterMahasiswa::where('kelas_id', $kelasId)
+                ->where('semester_lokal', $semesterLokal)
+                ->where('is_active', 1)
+                ->pluck('user_id');
+
+            $sudahAda = Kompensasi::where('dosen_matakuliah_id', $id)
+                ->pluck('user_id');
+
+            $belumAda = $mahasiswaAktif->diff($sudahAda);
+
+            if ($belumAda->isEmpty()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Belum terdapat data kompensasi.'
+                ]);
+            }
+
+            foreach ($belumAda as $userId) {
+                Kompensasi::create([
+                    'user_id' => $userId,
+                    'dosen_matakuliah_id' => $dosenMatakuliah->id,
+                    'menit_kompensasi' => 0,
+                    'keterangan' => null,
+                    'is_active' => true,
+                    'semester_lokal' => $semesterLokal,
+                ]);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => $belumAda->count() . ' mahasiswa berhasil ditambahkan ke tabel kompensasi.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal menambahkan data kompensasi: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
 
 
 }

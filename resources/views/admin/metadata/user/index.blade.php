@@ -497,13 +497,13 @@
 
         const urlEditUser = "{{ route('user.show', ':id') }}";
 
-        function editData(id) {
+       function editData(id) {
             const url = urlEditUser.replace(':id', id);
 
             $.ajax({
                 url: url,
                 type: "GET",
-                success: function(response) {
+                success: function (response) {
                     if (response.status === true) {
                         const user = response.data;
 
@@ -514,6 +514,26 @@
 
                         if (user.nim) {
                             modalTitle = 'Edit Data Mahasiswa';
+
+                            const selectedKelas = user.detail_mahasiswa?.kelas ?? '';
+                            const prodiId = user.detail_mahasiswa?.prodi_id ?? '';
+                            const lamaStudi = user.detail_mahasiswa?.prodi?.lama_studi ?? 8; // Default 8 kalau null
+                            const semesterLokal = user.kelas_semester_mahasiswas?.semester_lokal ?? '';
+                            const isActive = user.kelas_semester_mahasiswas?.is_active; // TRUE or FALSE
+
+                            const statusText = isActive == 1 ? 'Aktif' : 'Tidak Aktif';
+                            modalTitle = `Edit Data Mahasiswa ${statusText}`;
+
+                            let semesterOptions = '<option value="">Pilih Semester</option>';
+                            for (let i = 1; i <= lamaStudi; i++) {
+                                semesterOptions += `<option value="${i}" ${semesterLokal == i ? 'selected' : ''}>Semester ${i}</option>`;
+                            }
+
+                            let isActiveOptions = `
+                                <option value="">Pilih Status</option>
+                                <option value="1" ${isActive === 1 ? 'selected' : ''}>Aktif</option>
+                                <option value="0" ${isActive === 0 ? 'selected' : ''}>Tidak Aktif</option>
+                            `;
 
                             $modalBody.append(`
                                 <div class="mb-3">
@@ -527,9 +547,21 @@
                                 <div class="mb-3">
                                     <label for="kelas" class="form-label">Kelas</label>
                                     <select class="form-control select-kelas" id="kelas" name="kelas_id"
-                                        data-selected="${user.detail_mahasiswa?.kelas ?? ''}"
-                                        data-prodi-id="${user.detail_mahasiswa?.prodi_id ?? ''}">
+                                        data-selected="${selectedKelas}"
+                                        data-prodi-id="${prodiId}">
                                         <option value="">Loading...</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="semester_lokal" class="form-label">Semester Lokal</label>
+                                    <select class="form-control" id="semester_lokal" name="semester_lokal">
+                                        ${semesterOptions}
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="is_active" class="form-label">Status Mahasiswa</label>
+                                    <select class="form-control" id="is_active" name="is_active">
+                                        ${isActiveOptions}
                                     </select>
                                 </div>
                             `);
@@ -618,7 +650,7 @@
                         alert('Data tidak ditemukan.');
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     toastr.error('Terjadi kesalahan: ' + xhr.responseText);
                 }
             });
@@ -675,7 +707,6 @@
                 }
             });
         });
-
 
         const urlDeleteUser = "{{ route('user.destroy', ':id') }}";
 
