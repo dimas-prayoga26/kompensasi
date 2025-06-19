@@ -319,7 +319,10 @@
                         
                         return `
                             <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
-                                <i class="fe fe-edit"></i> Update
+                                <i class="fe fe-edit"></i> Perbarui Data Kompensasi
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="editData(${full.id})">
+                                <i class="fe fe-edit"></i> Sinkronisasi Mahasiswa Aktif
                             </button>
                            <a href="/portal/matakuliah-diampu/kompensasi/${full.id}" class="btn btn-info btn-sm">
                                 <i class="fe fe-eye"></i> Detail

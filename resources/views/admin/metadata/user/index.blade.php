@@ -5,11 +5,46 @@
 @section('css')
 
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
 <style>
     div.dataTables_filter {
         margin-bottom: 2rem;
     }
+
+    
+    .select2-container--open {
+        z-index: 9999 !important; 
+    }
+
+    
+    .select2-container {
+        width: 100% !important;
+    }
+
+    .modal .select2-container {
+        width: 100% !important;  
+        margin-bottom: 10px; 
+    }
+
+    .select2-container .select2-selection--single {
+        height: 38px;  
+        padding: 6px;
+        font-size: 14px;  
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px;
+        position: absolute;
+        top: 1px;
+        right: 1px;
+        width: 32px;
+    }
+
+    .swal-custom-z {
+        z-index: 2000 !important;
+    }
+
 </style>
 
 
@@ -119,7 +154,15 @@
             <label for="nim" class="form-label" id="labelNim">NIP</label>
             <input type="text" class="form-control" id="nim" name="nim" placeholder="Masukkan NIP">
             <div id="nimAlert" class="form-text text-danger mt-1"></div>
+          </div>
+
+        <div class="mb-3 mt-3" id="kelasWrapper">
+            <label for="kelas_id" class="form-label">Kelas</label>
+            <select class="select2 form-select" id="kelas_id" name="kelas_id" required>
+                <option value="" disabled selected>-- Pilih Kelas --</option>
+            </select>
         </div>
+
 
 
         </div>
@@ -164,6 +207,7 @@
 @section('js')
 
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 
     <script>
@@ -189,10 +233,46 @@
                 $('#modalLabel').text('Tambah Data Mahasiswa');
                 $('#labelNim').text('NIM');
                 $('#nim').attr('placeholder', 'Masukkan NIM');
+                $('#kelasWrapper').show(); // tampilkan kelas
             } else {
                 $('#modalLabel').text('Tambah Data Dosen');
                 $('#labelNim').text('NIP');
                 $('#nim').attr('placeholder', 'Masukkan NIP');
+                $('#kelasWrapper').hide(); // sembunyikan kelas
+            }
+        });
+
+        $('#modalTambahData').on('shown.bs.modal', function () {
+            // Inisialisasi select2
+            $('#kelas_id').select2({
+                placeholder: 'Cari Kelas...',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#modalTambahData'),
+                ajax: {
+                    url: "{{ route('user.kelas.select2') }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function (data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    cache: true
+                }
+            });
+
+            // Cek default radio saat modal dibuka
+            const selectedValue = $('input[name="default-radio-1"]:checked').val();
+            if (selectedValue === 'mahasiswa') {
+                $('#kelasWrapper').show();
+            } else {
+                $('#kelasWrapper').hide();
             }
         });
 
@@ -324,58 +404,41 @@
 
             const selectedRole = $('input[name="default-radio-1"]:checked').val();
             const nimInput = $("#nim").val().trim();
+            const kelasId = $("#kelas_id").val(); // Ambil kelas_id
             $("#nimAlert").text("");
 
             let valid = true;
 
+            // Validasi berdasarkan peran
             if (selectedRole === 'mahasiswa') {
                 const nimRegex = /^[0-9]{1,7}$/;
                 if (!nimRegex.test(nimInput)) {
-                    $("#tambahData")[0].reset();
-                    $('#modalTambahData').modal('hide');
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'NIM harus berupa angka maksimal 7 digit.',
-                        timer: 3000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    valid = false;
+                    showError("NIM harus berupa angka maksimal 7 digit.");
+                    return;
                 }
+
+                if (!kelasId) {
+                    showError("Kelas harus dipilih untuk mahasiswa.");
+                    return;
+                }
+
             } else if (selectedRole === 'dosen') {
                 const nipRegex = /^[0-9]{18}$/;
                 if (!nipRegex.test(nimInput)) {
-                    $("#tambahData")[0].reset();
-                    $('#modalTambahData').modal('hide');
-
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'NIP harus berupa angka 18 digit.',
-                        timer: 3000,
-                        timerProgressBar: true,
-                        showConfirmButton: false,
-                    });
-                    valid = false;
+                    showError("NIP harus berupa angka 18 digit.");
+                    return;
                 }
             }
 
-            if (!valid) return;
-
+            // FormData untuk pengiriman ke backend
             let formData = new FormData();
             formData.append("role", selectedRole);
 
             if (selectedRole === 'mahasiswa') {
                 formData.append("nim", nimInput);
+                formData.append("kelas_id", kelasId); // Kirim kelas_id
             } else {
                 formData.append("nip", nimInput);
-            }
-
-            let fileUpload = $("#file_upload")[0]?.files[0];
-            if (fileUpload) {
-                formData.append("file_upload", fileUpload);
             }
 
             $.ajax({
@@ -389,39 +452,48 @@
                 },
                 success: function (response) {
                     if (response.status === true) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil',
-                            text: response.message || 'Data berhasil diproses.',
-                            timer: 2000,
-                            timerProgressBar: true,
-                            showConfirmButton: false
-                        });
-                        $("#tambahData")[0].reset();
-                        $('#modalTambahData').modal('hide');
-                        table.ajax.reload();
+                        showSuccess(response.message || 'Data berhasil diproses.');
                     } else {
-                        $("#tambahData")[0].reset();
-                        $('#modalTambahData').modal('hide');
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            text: response.message || 'Data tidak berhasil diproses.',
-                            showConfirmButton: true,
-                        });
+                        showError(response.message || 'Data tidak berhasil diproses.');
                     }
                 },
                 error: function (xhr) {
                     const message = xhr.responseJSON?.message || 'Terjadi kesalahan saat menyimpan data.';
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: message,
-                        showConfirmButton: true,
-                    });
+                    showError(message);
                 }
             });
+
+            // Fungsi pesan sukses
+            function showSuccess(message) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: message,
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: false
+                });
+                $("#tambahData")[0].reset();
+                $('#modalTambahData').modal('hide');
+                table.ajax.reload();
+            }
+
+            // Fungsi pesan gagal
+            function showError(message) {
+                $("#tambahData")[0].reset();
+                $('#modalTambahData').modal('hide');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: message,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                });
+                valid = false;
+            }
         });
+
 
         const urlEditUser = "{{ route('user.show', ':id') }}";
 
@@ -441,7 +513,6 @@
                         let modalTitle = 'Edit Data';
 
                         if (user.nim) {
-
                             modalTitle = 'Edit Data Mahasiswa';
 
                             $modalBody.append(`
@@ -455,13 +526,14 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="kelas" class="form-label">Kelas</label>
-                                    <input type="text" class="form-control" id="kelas" name="kelas" value="${user.detail_mahasiswa?.kelas ?? ''}">
+                                    <select class="form-control select-kelas" id="kelas" name="kelas_id"
+                                        data-selected="${user.detail_mahasiswa?.kelas ?? ''}"
+                                        data-prodi-id="${user.detail_mahasiswa?.prodi_id ?? ''}">
+                                        <option value="">Loading...</option>
+                                    </select>
                                 </div>
-
                             `);
-
                         } else if (user.nip) {
-
                             modalTitle = 'Edit Data Dosen';
 
                             $modalBody.append(`
@@ -494,10 +566,54 @@
                         }
 
                         $('#modalEditDataLabel').text(modalTitle);
-
                         $('#editData').data('id', id);
-
                         $('#modalEditData').modal('show');
+
+                        setTimeout(() => {
+                            const $kelasSelect = $('#kelas');
+                            const selectedNamaKelas = $kelasSelect.data('selected');
+                            const prodiId = $kelasSelect.data('prodi-id');
+
+                            if ($kelasSelect.length) {
+                                $kelasSelect.select2({
+                                    placeholder: 'Pilih kelas...',
+                                    allowClear: true,
+                                    dropdownParent: $('#modalEditData'),
+                                    ajax: {
+                                        url: "{{ route('user.kelas.detailSelect2') }}",
+                                        data: function (params) {
+                                            return {
+                                                q: params.term,
+                                                prodi_id: prodiId
+                                            };
+                                        },
+                                        processResults: function (data) {
+                                            return {
+                                                results: data.results
+                                            };
+                                        }
+                                    }
+                                });
+
+                                if (selectedNamaKelas) {
+                                    $.ajax({
+                                        url: "{{ route('user.kelas.detailSelect2') }}",
+                                        data: {
+                                            q: selectedNamaKelas,
+                                            prodi_id: prodiId
+                                        },
+                                        success: function (data) {
+                                            const found = data.results.find(k => k.text === selectedNamaKelas);
+                                            if (found) {
+                                                const option = new Option(found.text, found.id, true, true);
+                                                $kelasSelect.append(option).trigger('change');
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }, 300);
+
                     } else {
                         alert('Data tidak ditemukan.');
                     }
@@ -507,6 +623,7 @@
                 }
             });
         }
+
 
         $("#updateData").on("click", function(e) {
             e.preventDefault();

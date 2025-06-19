@@ -57,7 +57,8 @@
                                       <th>Tahun Ajaran</th>
                                       <th>Semester</th>
                                       <th>No Semester</th>
-                                      <th>Status</th>
+                                      <th>Status Semester Sekarang</th>
+                                      <th>Status Semester Sebelumnya</th>
                                   </tr>
                               </thead>
                               <tbody>
@@ -160,6 +161,16 @@
                             }
                         }
                     },
+                    {
+                        targets: 5,
+                        render: function (data, type, full, meta) {
+                            if (full.current_aktif) {
+                                return `<button class="btn btn-success btn-sm">Aktif</button>`;
+                            } else {
+                                return `<button class="btn btn-danger btn-sm">Tidak Aktif</button>`;
+                            }
+                        }
+                    },
 
                 ],
                 columns: [
@@ -168,6 +179,7 @@
                     { data: 'semester' },
                     { data: 'no_semester' },
                     { data: 'aktif' },
+                    { data: 'current_aktif' },
                 ],
                 language: {
                     searchPlaceholder: 'Search...',

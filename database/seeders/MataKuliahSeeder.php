@@ -62,18 +62,15 @@ class MataKuliahSeeder extends Seeder
                     ]
                 );
 
-                // Tentukan semester lokal
                 $maxSemester = $prodi->lama_studi ?? 8;
                 $semesterLokal = ($index % $maxSemester) + 1;
 
-                // Ambil semester global yang sesuai berdasarkan semester_lokal
                 $semesterGlobal = $semesters->firstWhere('no_semester', $semesterLokal);
                 if (!$semesterGlobal) {
                     $this->command->warn("Semester global dengan no_semester {$semesterLokal} tidak ditemukan.");
                     continue;
                 }
 
-                // Hubungkan ke tabel pivot
                 MatakuliahSemester::firstOrCreate([
                     'matakuliah_id'   => $matakuliah->id,
                     'semester_id'     => $semesterGlobal->id,

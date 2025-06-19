@@ -16,10 +16,10 @@ return new class extends Migration
             $table->string('tahun_ajaran'); // contoh: 2025/2026
             $table->enum('semester', ['Ganjil', 'Genap']);
             $table->unsignedInteger('no_semester'); // contoh: semester ke-1, 2, 3...
-            $table->boolean('aktif')->default(false);
+            $table->boolean('aktif')->default(false); // semester aktif saat ini
+            $table->boolean('current_aktif')->default(false); // semester sebelumnya yang masih relevan
             $table->timestamps();
         });
-
     }
 
     /**

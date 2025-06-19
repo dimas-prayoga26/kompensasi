@@ -13,37 +13,45 @@ class SemesterSeeder extends Seeder
         $noSemester = 1;
         $tahunGanjil = $startTahun;
 
-        while ($noSemester <= 11) {
-            $tahunAjaranGanjil = "{$tahunGanjil}/" . ($tahunGanjil + 1);
+        $targetAktifSemester = 11; // ini semester yang aktif
+        $targetCurrentAktifSemester = $targetAktifSemester - 2; // 2 semester sebelumnya
 
-            // Tambah semester Ganjil
-            Semester::firstOrCreate([
-                'tahun_ajaran' => $tahunAjaranGanjil,
+        while ($noSemester <= $targetAktifSemester) {
+            $tahunAjaran = "{$tahunGanjil}/" . ($tahunGanjil + 1);
+
+            // Semester Ganjil
+            $isAktifGanjil = ($noSemester === $targetAktifSemester);
+            $isCurrentAktifGanjil = ($noSemester === $targetCurrentAktifSemester);
+
+            Semester::updateOrCreate([
+                'tahun_ajaran' => $tahunAjaran,
                 'semester'     => 'Ganjil',
             ], [
-                'no_semester'  => $noSemester,
-                'aktif'        => ($noSemester === 11),
+                'no_semester'   => $noSemester,
+                'aktif'         => $isAktifGanjil,
+                'current_aktif' => $isCurrentAktifGanjil,
             ]);
             $noSemester++;
 
-            if ($noSemester > 11) break;
+            if ($noSemester > $targetAktifSemester) break;
 
-            // Tahun ajaran Genap lompat ke tahun berikutnya
-            $tahunGenap = $tahunGanjil + 1;
-            $tahunAjaranGenap = "{$tahunGenap}/" . ($tahunGenap + 1);
+            // Semester Genap
+            $isAktifGenap = ($noSemester === $targetAktifSemester);
+            $isCurrentAktifGenap = ($noSemester === $targetCurrentAktifSemester);
 
-            // Tambah semester Genap
-            Semester::firstOrCreate([
-                'tahun_ajaran' => $tahunAjaranGenap,
+            Semester::updateOrCreate([
+                'tahun_ajaran' => $tahunAjaran,
                 'semester'     => 'Genap',
             ], [
-                'no_semester'  => $noSemester,
-                'aktif'        => false,
+                'no_semester'   => $noSemester,
+                'aktif'         => $isAktifGenap,
+                'current_aktif' => $isCurrentAktifGenap,
             ]);
             $noSemester++;
 
-            // Update tahun Ganjil berikutnya
             $tahunGanjil++;
         }
     }
+
 }
+

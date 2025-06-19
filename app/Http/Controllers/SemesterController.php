@@ -30,7 +30,7 @@ class SemesterController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-     public function store(Request $request)
+    public function store(Request $request)
     {
         $request->validate([
             'tahun_ajaran' => 'required|string',
@@ -43,7 +43,7 @@ class SemesterController extends Controller
             // Nonaktifkan semester sebelumnya
             Semester::where('aktif', true)->update(['aktif' => false]);
 
-            // Tambahkan semester baru dan set aktif
+            // Tambah semester baru
             $semesterBaru = Semester::create([
                 'tahun_ajaran' => $request->tahun_ajaran,
                 'semester' => $request->semester,
@@ -51,8 +51,30 @@ class SemesterController extends Controller
                 'aktif' => true,
             ]);
 
+            // Reset current_aktif
+            Semester::where('current_aktif', true)->update(['current_aktif' => false]);
+
+            // Atur current_aktif berdasarkan jenis semester
+            $tahunBaru = $request->tahun_ajaran;
+            $jenisSemester = $request->semester;
+            $tahunPecah = explode('/', $tahunBaru);
+            $tahunSebelum = ((int)$tahunPecah[0] - 1) . '/' . ((int)$tahunPecah[1] - 1);
+
+            if ($jenisSemester === 'Ganjil') {
+                Semester::where('tahun_ajaran', $tahunBaru)
+                    ->where('semester', 'Genap')
+                    ->update(['current_aktif' => true]);
+            } else {
+                Semester::where('tahun_ajaran', $tahunSebelum)
+                    ->where('semester', 'Genap')
+                    ->update(['current_aktif' => true]);
+            }
+
+
+            // Ambil ID semester baru
             $semesterIdBaru = $semesterBaru->id;
 
+            // Ambil mahasiswa dari semester sebelumnya (non-aktif)
             $mahasiswaList = KelasSemesterMahasiswa::whereHas('semester', function ($query) {
                 $query->where('aktif', false);
             })->get();
@@ -63,34 +85,27 @@ class SemesterController extends Controller
                 $detail = DetailMahasiswa::where('user_id', $item->user_id)->first();
                 $prodi = $detail?->prodi;
 
-                if (!$prodi) {
-                    continue; // skip jika tidak ada prodi
-                }
+                if (!$prodi) continue;
 
                 $maxSemester = $prodi->lama_studi ?? 8;
 
-                // Cek apakah mahasiswa sudah melewati semester maksimal
                 if ($semesterLokalBaru > $maxSemester) {
-                    $item->update([
-                        'is_active' => false
-                    ]);
+                    $item->update(['is_active' => false]);
                     continue;
                 }
 
-                // Cek dan buat kelas baru jika semester ganjil
                 $kelasLama = Kelas::find($item->kelas_id);
                 $kelasBaruId = $item->kelas_id;
 
                 if ($semesterBaru->semester === 'Ganjil' && $kelasLama && preg_match('/^(TI|RPL)(\d)([A-Z])$/', $kelasLama->nama, $matches)) {
                     $prefix = $matches[1];
-                    $tingkat = (int) $matches[2] + 1;
+                    $tingkat = (int)$matches[2] + 1;
                     $huruf = $matches[3];
                     $kelasBaruNama = $prefix . $tingkat . $huruf;
 
                     $kelasBaru = Kelas::where('nama', $kelasBaruNama)->first();
                     if ($kelasBaru) {
                         $kelasBaruId = $kelasBaru->id;
-
                         DetailMahasiswa::where('user_id', $item->user_id)
                             ->update(['kelas' => $kelasBaru->nama]);
                     }
@@ -120,6 +135,7 @@ class SemesterController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Display the specified resource.

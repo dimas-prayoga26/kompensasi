@@ -45,6 +45,8 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get("/user/datatable", [UserController::class, "datatable"])->name("user.datatable");
+        Route::get('/user/kelas/select2', [UserController::class, 'select2Kelas'])->name('user.kelas.select2');
+        Route::get('/user/detailKelas/detailSelect2', [UserController::class, 'detailSelect2Kelas'])->name('user.kelas.detailSelect2');
         Route::resource('user', UserController::class);
 
         Route::get("/mataKuliah/datatable", [MataKuliahController::class, "datatable"])->name("mataKuliah.datatable");

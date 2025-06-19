@@ -57,7 +57,7 @@ class User extends Authenticatable
 
     public function kelasSemesterMahasiswas()
     {
-        return $this->hasMany(KelasSemesterMahasiswa::class, 'mahasiswa_id');
+        return $this->hasOne(KelasSemesterMahasiswa::class, 'user_id');
     }
 
 }

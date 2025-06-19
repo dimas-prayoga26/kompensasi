@@ -247,11 +247,12 @@ class MatakuliahDiampuController extends Controller
     public function datatableKompensasi($id)
     {
         $data = Kompensasi::with([
-            'user.detailMahasiswa',
-            'dosenMatakuliah.matakuliah',
-        ])
-        ->where('dosen_matakuliah_id', $id)
-        ->get();
+                'user.detailMahasiswa',
+                'dosenMatakuliah.matakuliah',
+            ])
+            ->where('dosen_matakuliah_id', $id)
+            ->where('is_active', true)
+            ->get();
 
         return datatables()->of($data)
             ->addColumn('nama_mahasiswa', function ($row) {
@@ -262,9 +263,10 @@ class MatakuliahDiampuController extends Controller
             ->addColumn('menit_kompensasi', function ($row) {
                 return $row->menit_kompensasi . ' menit';
             })
-            ->rawColumns(['aksi'])
+            ->rawColumns(['aksi']) // hanya perlu ini kalau ada kolom HTML/aksi
             ->make(true);
     }
+
 
     public function kompensasiDetail(string $id)
     {

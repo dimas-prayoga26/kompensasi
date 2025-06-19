@@ -35,7 +35,6 @@ class KelasSemesterMahasiswaSeeder extends Seeder
 
             $tingkat = (int)$matches[2];
 
-            // Hitung semester lokal berdasarkan tingkat kelas dan semester aktif (Ganjil/Genap)
             $semesterLokal = ($tingkat - 1) * 2 + ($semesterAktif->semester === 'Ganjil' ? 1 : 2);
 
             $maksimalSemester = $mahasiswa->prodi->lama_studi ?? 8;
@@ -56,7 +55,7 @@ class KelasSemesterMahasiswaSeeder extends Seeder
                 [
                     'kelas_id' => $kelas->id,
                     'semester_lokal' => $semesterLokal,
-                    'is_active' => true, // Tambahkan flag aktif
+                    'is_active' => true,
                 ]
             );
         }
