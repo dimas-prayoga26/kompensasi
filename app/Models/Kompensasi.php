@@ -8,7 +8,7 @@ class Kompensasi extends Model
 {
     protected $keyType = 'string';
 
-    protected $guarded = [''];
+    protected $guarded = [];
 
     public function dosenMatakuliah()
     {

@@ -149,28 +149,28 @@ class MatakuliahDiampuController extends Controller
      */
     public function destroy(string $id)
     {
-        // dd($id);
         try {
             DB::beginTransaction();
 
             Kompensasi::where('dosen_matakuliah_id', $id)
                 ->where('is_active', true)
-                ->delete();
+                ->update(['is_active' => false]); // ✅ Hanya ubah status, tidak menghapus
 
             DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => "Berhasil menghapus data ."
+                'message' => "Berhasil menonaktifkan data kompensasi."
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
                 'status' => false,
-                'message' => 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan saat menonaktifkan data: ' . $e->getMessage()
             ], 500);
         }
     }
+
 
     public function datatable(Request $request)
     {
@@ -399,12 +399,13 @@ class MatakuliahDiampuController extends Controller
                     ->where('is_active', true)
                     ->pluck('user_id');
 
-                if ($mahasiswaAktif->isEmpty()) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => 'Tidak ada mahasiswa aktif pada semester ini.'
-                    ]);
-                }
+                    
+                    if ($mahasiswaAktif->isEmpty()) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Tidak ada mahasiswa aktif pada semester ini.'
+                        ]);
+                    }
 
                 foreach ($mahasiswaAktif as $userId) {
                     Kompensasi::create([
@@ -417,9 +418,11 @@ class MatakuliahDiampuController extends Controller
                     ]);
                 }
 
+                DB::commit();
+
                 return response()->json([
                     'status' => true,
-                    'message' => 'Data kompensasi berhasil dibuat hanya untuk mahasiswa semester lokal ' . $semesterLokal
+                    'message' => 'Data kompensasi berhasil dibuat hanya untuk mahasiswa semester ' . $semesterLokal
                 ]);
             } elseif ($kompensasiAktifAda) {
 
