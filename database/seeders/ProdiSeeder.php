@@ -11,7 +11,7 @@ class ProdiSeeder extends Seeder
     {
         $prodis = [
             ['kode_prodi' => '03', 'nama' => 'Teknik Informatika', 'lama_studi' => 6], // 3 tahun = 6 semester
-            ['kode_prodi' => '04', 'nama' => 'Rekayasa Perangkat Lunak', 'lama_studi' => 8], // 4 tahun = 8 semester
+            ['kode_prodi' => '05', 'nama' => 'Rekayasa Perangkat Lunak', 'lama_studi' => 8], // 4 tahun = 8 semester
         ];
 
         foreach ($prodis as $prodi) {

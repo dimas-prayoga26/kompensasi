@@ -7,10 +7,12 @@ use App\Models\Kelas;
 use App\Models\Prodi;
 use App\Models\Semester;
 use App\Models\DetailDosen;
+use App\Imports\UsersImport;
 use Illuminate\Http\Request;
 use App\Models\DetailMahasiswa;
-use App\Models\KelasSemesterMahasiswa;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Models\KelasSemesterMahasiswa;
 
 class UserController extends Controller
 {
@@ -67,13 +69,13 @@ class UserController extends Controller
                 ]);
                 $user->assignRole('Mahasiswa');
 
-                $tahunAjaran = "{$tahunMasuk}/" . ($tahunMasuk + 1);
-                Semester::firstOrCreate([
-                    'tahun_ajaran' => $tahunAjaran,
-                    'semester' => 'Ganjil',
-                ], [
-                    'no_semester' => 1
-                ]);
+                // $tahunAjaran = "{$tahunMasuk}/" . ($tahunMasuk + 1);
+                // Semester::firstOrCreate([
+                //     'tahun_ajaran' => $tahunAjaran,
+                //     'semester' => 'Ganjil',
+                // ], [
+                //     'no_semester' => 1
+                // ]);
 
                 DetailMahasiswa::create([
                     'user_id' => $user->id,
@@ -392,6 +394,17 @@ class UserController extends Controller
         });
 
         return response()->json(['results' => $results]);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls'
+        ]);
+
+        Excel::import(new UsersImport, $request->file('file_excel'));
+
+        return response()->json(['message' => 'Import berhasil!']);
     }
 
 

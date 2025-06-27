@@ -41,12 +41,15 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix("portal")->group(function() {
         Route::post("/logout", [DashboardController::class, "authLogout"])->name("auth.logout");
 
-        Route::get("/dashboard/datatable", [DashboardController::class, "datatable"])->name("dashboard.datatable");
+        Route::get("/mahasiswa/dashboard/datatable", [DashboardController::class, "mahasiswaDashboardDatatable"])->name("mahasiswa.dashboard.datatable");
+        Route::get('/admin/dashboard/datatable', [DashboardController::class, 'adminDashboardDatatable'])->name('admin.dashboard.datatable');
+
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get("/user/datatable", [UserController::class, "datatable"])->name("user.datatable");
         Route::get('/user/kelas/select2', [UserController::class, 'select2Kelas'])->name('user.kelas.select2');
         Route::get('/user/detailKelas/detailSelect2', [UserController::class, 'detailSelect2Kelas'])->name('user.kelas.detailSelect2');
+        Route::post('/user/import', [UserController::class, 'import'])->name('user.import');
         Route::resource('user', UserController::class);
 
         Route::get("/mataKuliah/datatable", [MataKuliahController::class, "datatable"])->name("mataKuliah.datatable");

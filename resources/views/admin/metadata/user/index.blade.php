@@ -201,6 +201,31 @@
   </div>
 </div>
 
+<!-- Modal Import Data -->
+<div class="modal fade" id="modalImportData" tabindex="-1" aria-labelledby="modalImportDataLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form id="formImportData" enctype="multipart/form-data" class="modal-content">
+      @csrf
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalImportDataLabel">Import Data User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="file_excel" class="form-label">Upload File Excel</label>
+          <input type="file" class="form-control" name="file_excel" id="file_excel" accept=".xlsx, .xls" required>
+        </div>
+        <div id="errorMsg" class="text-danger"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="submit" class="btn btn-success">Import</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
 
 @endsection
 
@@ -493,6 +518,82 @@
                 valid = false;
             }
         });
+
+        $('#formImportData').on('submit', function(e) {
+                e.preventDefault();
+
+                var formData = new FormData(this);
+                const modalEl = document.getElementById('modalImportData');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+
+                // Tutup modal
+                modal.hide();
+
+                let modalClosed = false;
+
+                // Event jika modal selesai tertutup
+                function afterModalClosed() {
+                    if (modalClosed) return;
+                    modalClosed = true;
+
+                    // ⏳ Tampilkan Swal loading
+                    Swal.fire({
+                        title: 'Mengupload...',
+                        text: 'Mohon tunggu, sedang mengimpor data.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // 🔁 Jalankan AJAX
+                    $.ajax({
+                        url: "{{ route('user.import') }}",
+                        method: "POST",
+                        data: formData,
+                        dataType: "json",
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            Swal.close();
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: 'Data berhasil diimport.',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+
+                            $('#datatable').DataTable().ajax.reload();
+                        },
+                        error: function(xhr) {
+                            Swal.close();
+
+                            if (xhr.status === 422) {
+                                $('#errorMsg').text(xhr.responseJSON.errors.file_excel[0]);
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal!',
+                                    text: 'Terjadi kesalahan saat mengupload file.'
+                                });
+                            }
+                        }
+                    });
+                }
+
+                // Dengarkan modal selesai ditutup
+                modalEl.addEventListener('hidden.bs.modal', function handler() {
+                    modalEl.removeEventListener('hidden.bs.modal', handler);
+                    afterModalClosed();
+                });
+
+                // Fallback: jika `hidden.bs.modal` tidak terpanggil dalam 1 detik, lanjutkan juga
+                setTimeout(() => {
+                    afterModalClosed();
+                }, 1000);
+            });
 
 
         const urlEditUser = "{{ route('user.show', ':id') }}";

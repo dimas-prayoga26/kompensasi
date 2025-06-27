@@ -2,52 +2,84 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
+use App\Models\Kelas;
 use App\Models\Semester;
 use App\Models\Kompensasi;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
+use App\Models\KelasSemesterMahasiswa;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         $user = Auth::user();
-        $detail = $user->detailMahasiswa;
 
         $lamaStudi = null;
-        $tahunMasuk = null;
-        $jumlahSemesterBerjalan = 0;
         $kompensasiPerSemester = [];
+        $kelasAkhir = [];
 
-        if ($detail && $detail->prodi) {
-            $lamaStudi = $detail->prodi->lama_studi;
-            $tahunMasuk = $detail->tahun_masuk;
+        // Inisialisasi jumlah mahasiswa aktif & tidak aktif (khusus untuk superAdmin)
+        $mahasiswaAktif = 0;
+        $mahasiswaTidakAktif = 0;
 
-            $semesterAktif = Semester::where('aktif', true)->first();
+        // Cek role menggunakan Spatie
+        if ($user->hasRole('Mahasiswa')) {
+            $detail = $user->detailMahasiswa;
 
-            if ($semesterAktif) {
-                $tahunAjaranSekarang = intval(substr($semesterAktif->tahun_ajaran, 0, 4));
-                $semesterType = strtolower($semesterAktif->semester);
+            if ($detail && $detail->prodi) {
+                $lamaStudi = $detail->prodi->lama_studi;
+                $tahunMasuk = $detail->tahun_masuk;
 
-                $selisihTahun = $tahunAjaranSekarang - $tahunMasuk;
-                $jumlahSemesterBerjalan = $selisihTahun * 2 + ($semesterType == 'genap' ? 2 : 1);
+                $semesterAktif = Semester::where('aktif', true)->first();
 
-                $semesterMax = min($jumlahSemesterBerjalan, $lamaStudi);
+                if ($semesterAktif) {
+                    $tahunAjaranSekarang = intval(substr($semesterAktif->tahun_ajaran, 0, 4));
+                    $semesterType = strtolower($semesterAktif->semester);
 
-                for ($i = 1; $i <= $semesterMax; $i++) {
-                    $menit = Kompensasi::where('user_id', $user->id)
+                    $selisihTahun = $tahunAjaranSekarang - $tahunMasuk;
+                    $jumlahSemesterBerjalan = $selisihTahun * 2 + ($semesterType === 'genap' ? 2 : 1);
+
+                    $semesterMax = min($jumlahSemesterBerjalan, $lamaStudi);
+
+                    for ($i = 1; $i <= $semesterMax; $i++) {
+                        $menit = Kompensasi::where('user_id', $user->id)
                             ->where('semester_lokal', $i)
                             ->sum('menit_kompensasi');
-                    $kompensasiPerSemester[$i] = $menit;
+                        $kompensasiPerSemester[$i] = $menit;
+                    }
                 }
             }
+
+        } elseif ($user->hasRole('superAdmin')) {
+            // Ambil kelas akhir
+            $kelasAkhir = Kelas::where(function ($query) {
+                $query->where('nama', 'like', 'TI3%')
+                    ->orWhere('nama', 'like', 'RPL4%');
+            })->get();
+
+            // Hitung jumlah mahasiswa aktif & tidak aktif
+            $mahasiswaAktif = KelasSemesterMahasiswa::where('is_active', true)
+                ->distinct('user_id')
+                ->count('user_id');
+
+            $mahasiswaTidakAktif = KelasSemesterMahasiswa::where('is_active', false)
+                ->distinct('user_id')
+                ->count('user_id');
+
         }
 
-        // dd($lamaStudi);
-
-        return view('admin.index', compact('lamaStudi', 'kompensasiPerSemester'));
+        return view('admin.index', compact(
+            'lamaStudi',
+            'kompensasiPerSemester',
+            'kelasAkhir',
+            'mahasiswaAktif',
+            'mahasiswaTidakAktif'
+        ));
     }
+
 
     public function authLogout()
     {
@@ -66,7 +98,7 @@ class DashboardController extends Controller
         return response()->json(['redirect_url' => route('mahasiswa.login')]);
     }
 
-    public function datatable(Request $request)
+    public function mahasiswaDashboardDatatable(Request $request)
     {
         if (!$request->filled('semester')) {
             return DataTables::of(collect([]))->make(true);
@@ -94,6 +126,65 @@ class DashboardController extends Controller
             })
             ->make(true);
 
+    }
+
+    public function adminDashboardDatatable(Request $request)
+    {
+        $kelasId = $request->input('kelas_id');
+
+        if (!$kelasId) {
+            return DataTables::of([])->make(true);
+        }
+
+        // Ambil nama kelas berdasarkan ID
+        $kelas = Kelas::find($kelasId);
+        if (!$kelas) {
+            return DataTables::of([])->make(true);
+        }
+
+        $namaKelas = $kelas->nama; // contoh: TI3A, RPL4B
+
+        // Ambil semester aktif
+        $semesterAktif = Semester::where('aktif', true)->first();
+        if (!$semesterAktif) {
+            return DataTables::of([])->make(true);
+        }
+
+        $tahunSekarang = intval(substr($semesterAktif->tahun_ajaran, 0, 4));
+        $tipeSemester = strtolower($semesterAktif->semester);
+        $semesterBerjalan = ($tahunSekarang - 2000) * 2 + ($tipeSemester === 'genap' ? 2 : 1);
+
+        $mahasiswa = User::role('Mahasiswa')
+            ->whereHas('detailMahasiswa', function ($query) use ($namaKelas) {
+                $query->where('kelas', $namaKelas);
+            })
+            ->with('detailMahasiswa.prodi')
+            ->get();
+
+        $data = $mahasiswa->map(function ($user) use ($semesterBerjalan) {
+            $detail = $user->detailMahasiswa;
+
+            if (!$detail || !$detail->prodi || !$detail->tahun_masuk) {
+                return null;
+            }
+
+            $tahunMasuk = $detail->tahun_masuk;
+            $lamaStudi = $detail->prodi->lama_studi;
+            $semesterMax = min($semesterBerjalan, $lamaStudi);
+
+            $totalKompensasi = Kompensasi::where('user_id', $user->id)
+                ->whereBetween('semester_lokal', [1, $semesterMax])
+                ->sum('menit_kompensasi');
+
+            return [
+                'mahasiswa' => "{$detail->first_name} {$detail->last_name}",
+                'jumlah' => $totalKompensasi . ' menit',
+            ];
+        })->filter()->values();
+
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->make(true);
     }
 
 }

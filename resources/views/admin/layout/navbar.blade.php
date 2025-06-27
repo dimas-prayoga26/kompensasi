@@ -10,21 +10,23 @@
 
     <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
             
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                @if(isset($semesterMax))
-                    Jumlah Keseluruhan Kompensasi semester 1~{{ $semesterMax }} : {{ $totalKompensasi }} Menit
-                @else
-                    Jumlah Keseluruhan Kompensasi : {{ $totalKompensasi }} Menit
-                @endif
-            </div>
+        @role('Mahasiswa')
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    @if(isset($semesterMax))
+                        Jumlah Keseluruhan Kompensasi semester 1~{{ $semesterMax }} : {{ $totalKompensasi }} Menit
+                    @else
+                        Jumlah Keseluruhan Kompensasi : {{ $totalKompensasi }} Menit
+                    @endif
+                </div>
 
-            <div class="ms-3">
-                <button type="button" class="btn btn-primary btn-sm">
-                    <i class="fe fe-dollar-sign me-1"></i> Bayar Kompensasi
-                </button>
+                <div class="ms-3">
+                    <button type="button" class="btn btn-primary btn-sm">
+                        <i class="fe fe-dollar-sign me-1"></i> Bayar Kompensasi
+                    </button>
+                </div>
             </div>
-        </div>
+        @endrole
 
 
         <ul class="navbar-nav flex-row align-items-center ms-auto">

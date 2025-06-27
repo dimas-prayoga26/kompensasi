@@ -70,7 +70,7 @@ class UserSeeder extends Seeder
         // Data Prodi dan Mahasiswa
         $prodis = [
             ['kode' => '03', 'nama' => 'Informatika', 'lama_studi' => 6, 'prefix' => 'TI'],
-            ['kode' => '04', 'nama' => 'Rekayasa Perangkat Lunak', 'lama_studi' => 8, 'prefix' => 'RPL'],
+            ['kode' => '05', 'nama' => 'Rekayasa Perangkat Lunak', 'lama_studi' => 8, 'prefix' => 'RPL'],
         ];
 
         $tahunSekarang = (int) date('Y');
