@@ -8,6 +8,7 @@ use App\Http\Controllers\MataKuliahController;
 use App\Http\Controllers\MatakuliahDiampuController;
 use App\Http\Controllers\ProdiController;
 use App\Http\Controllers\SemesterController;
+use App\Http\Controllers\TugasKompensasiController;
 use App\Http\Controllers\UserController;
 use App\Models\MatakuliahSemester;
 
@@ -77,6 +78,12 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::put('/matakuliah-diampu/kompensasi/{id}/update', [MatakuliahDiampuController::class, 'kompensasiUpdate'])->name('matakuliah-diampu.kompensasi.update');
         Route::get("/matakuliah-diampu/kompensasi/{id}/datatable", [MatakuliahDiampuController::class, "datatableKompensasi"])->name("matakuliah-diampu.kompensasi.datatableKompensasi");
         Route::resource('matakuliah-diampu', MatakuliahDiampuController::class);
+
+        Route::get("/tugas-kompensasi/datatable", [TugasKompensasiController::class, "datatable"])->name("tugas-kompensasi.datatable");
+        Route::get('/tugas-kompensasi/{id}/detail', [TugasKompensasiController::class, 'detail']);
+        Route::delete('/tugas-kompensasi/detail/{id}', [TugasKompensasiController::class, 'hapusMahasiswa'])->name('tugas-kompensasi.detail.destroy');
+        Route::post('/tugas-kompensasi/pilih', [TugasKompensasiController::class, 'storeMahasiswaKompensasi'])->middleware('auth');
+        Route::resource('tugas-kompensasi', TugasKompensasiController::class);
     });
 });
 // Route::get('/', function () {

@@ -159,18 +159,16 @@
                     </div>
                 @elseif ($tipe === 'dosen')
                     <div class="mb-3">
-                        <label for="nip" class="form-label">NIP</label>
-                        <input 
-                          type="text" 
-                          name="nip" 
-                          id="nip" 
-                          class="form-control" 
-                          placeholder="Masukkan NIP"
-                          autofocus
-                          maxlength="18"
-                          pattern="\d{18}"
-                          inputmode="numeric">
-                    </div>
+                      <label for="nip" class="form-label">NIP</label>
+                      <input 
+                        type="text" 
+                        name="nip" 
+                        id="nip" 
+                        class="form-control" 
+                        placeholder="Masukkan NIP"
+                        autofocus
+                        inputmode="numeric">
+                  </div>
                 @endif
                 <div class="mb-3 form-password-toggle">
                   <div class="d-flex justify-content-between">

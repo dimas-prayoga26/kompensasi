@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('dosen_id')->constrained('users')->onDelete('cascade');
             $table->text('deskripsi_kompensasi');
+            $table->string('file_path');
             $table->integer('jumlah_mahasiswa')->default(1);
-            $table->enum('status', ['dibuka', 'ditutup'])->default('dibuka');
 
             $table->timestamps();
         });

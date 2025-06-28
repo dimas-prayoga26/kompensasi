@@ -86,6 +86,13 @@
             </li>
         @endhasanyrole
 
+        <li class="menu-item {{ request()->routeIs('tugas-kompensasi.index') ? 'active' : '' }}">
+            <a href="{{ route('tugas-kompensasi.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-clipboard"></i>
+                <div data-i18n="Analytics">Tugas Kompensasi</div>
+            </a>
+        </li>
+
         @role('superAdmin')
             <li class="menu-header small text-uppercase">
                 <span class="menu-header-text">Meta Data</span>

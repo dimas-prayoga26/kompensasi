@@ -37,6 +37,7 @@ class MatakuliahDiampuController extends Controller
      */
     public function store(Request $request)
     {
+        // dd($request);
         $request->validate([
             'dosen_id' => 'required|exists:users,id',
             'matakuliah_id' => 'required|exists:matakuliahs,id',

@@ -14,8 +14,7 @@ return new class extends Migration
         Schema::create('penawaran_kompensasi_users', function (Blueprint $table) {
             $table->id();
             $table->foreignId('penawaran_kompensasi_id')->constrained('penawaran_kompensasis')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Mahasiswa
-            $table->enum('status', ['pending', 'diterima', 'ditolak'])->default('pending');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });
     }

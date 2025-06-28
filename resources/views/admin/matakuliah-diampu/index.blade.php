@@ -118,13 +118,17 @@
                     </div>
                     <div class="modal-body">
 
-                        <div class="mb-3">
-                            <label for="dosen_id" class="form-label">Dosen</label>
-                            <select class="select2 form-select" id="dosen_id" name="dosen_id" required>
-                                <option value="" disabled selected>-- Pilih Dosen --</option>
+                        @if(Auth::user()->hasRole('Dosen'))
+                            <input type="hidden" name="dosen_id" value="{{ Auth::user()->id }}">
+                        @else
+                            <div class="mb-3">
+                                <label for="dosen_id" class="form-label">Dosen</label>
+                                <select class="select2 form-select" id="dosen_id" name="dosen_id" required>
+                                    <option value="" disabled selected>-- Pilih Dosen --</option>
 
-                            </select>
-                        </div>
+                                </select>
+                            </div>
+                        @endif
                         
                         <div class="mb-3">
                             <label for="matakuliah_id" class="form-label">Matakuliah</label>
@@ -165,13 +169,16 @@
                     <div class="modal-body">
                         <input type="hidden" id="edit_id_kelas" name="id">
 
-
-                        <div class="mb-3">
-                            <label for="edit_dosen_id" class="form-label">Dosen</label>
-                            <select class="form-select" id="edit_dosen_id" name="dosen_id" required>
-                                <option></option>
-                            </select>
-                        </div>
+                        @if(Auth::user()->hasRole('Dosen'))
+                            <input type="hidden" name="dosen_id" value="{{ Auth::user()->id }}">
+                        @else
+                            <div class="mb-3">
+                                <label for="edit_dosen_id" class="form-label">Dosen</label>
+                                <select class="form-select" id="edit_dosen_id" name="dosen_id" required>
+                                    <option></option>
+                                </select>
+                            </div>
+                         @endif
 
 
                         <div class="mb-3">
