@@ -145,7 +145,7 @@
                 <div class="card">
                     <div class="d-flex justify-content-between align-items-center p-3">
                         <div class="d-flex align-items-center">
-                            <h5 class="mb-0 me-3">Detail kompen mahasiswa akhir kelas</h5>
+                            <h5 class="mb-0 me-3">Detail kompen mahasiswa akhir semester, kelas</h5>
                             <select id="filterKelas" class="form-select" style="width: 200px;">
                                 <option selected disabled>Pilih Kelas</option>
                                 @foreach ($kelasAkhir as $kelas)
