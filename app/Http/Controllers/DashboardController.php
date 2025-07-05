@@ -100,33 +100,36 @@ class DashboardController extends Controller
 
     public function mahasiswaDashboardDatatable(Request $request)
     {
-        if (!$request->filled('semester')) {
-            return DataTables::of(collect([]))->make(true);
-        }
-
         $user = Auth::user();
 
-        $query = Kompensasi::with(['dosenMatakuliah.matakuliah'])
-            ->where('user_id', $user->id)
-            ->where('semester_lokal', $request->semester);
+        $query = Kompensasi::with(['dosenMatakuliah.matakuliah', 'user.detailMahasiswa'])
+            ->where('user_id', $user->id);
 
         return DataTables::of($query)
-            ->addIndexColumn() // untuk penomoran otomatis
+            ->addIndexColumn()
             ->addColumn('nama_matakuliah', function ($row) {
                 return optional(optional($row->dosenMatakuliah)->matakuliah)->nama ?? '-';
             })
             ->addColumn('menit_kompensasi', function ($row) {
                 return $row->menit_kompensasi;
             })
+            ->addColumn('semester', function ($row) {
+                $semesterLokal = $row->semester_lokal;
+                $isActive = $row->is_active;
+
+                if ($isActive == 0) {
+                    return "Semester {$semesterLokal} (Selesai)";
+                }
+
+                return "Semester {$semesterLokal} (Sedang Berlangsung)";
+            })
             ->addColumn('keterangan', function ($row) {
                 return $row->keterangan ?? '-';
             })
-            ->addColumn('action', function ($row) {
-                return '<button class="btn btn-success btn-sm" onclick="bayarKompen(' . $row->id . ')"><i class="fe fe-edit"></i> Bayar Kompen</button>';
-            })
             ->make(true);
-
     }
+
+
 
     public function adminDashboardDatatable(Request $request)
     {
@@ -178,6 +181,7 @@ class DashboardController extends Controller
 
             return [
                 'mahasiswa' => "{$detail->first_name} {$detail->last_name}",
+                'angkatan' => "{$detail->tahun_masuk}",
                 'jumlah' => $totalKompensasi . ' menit',
             ];
         })->filter()->values();

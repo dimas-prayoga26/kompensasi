@@ -14,9 +14,7 @@ use Illuminate\Support\Facades\Validator;
 
 class TugasKompensasiController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    
     public function index()
     {
         $dosens = User::role('Dosen')
@@ -26,25 +24,20 @@ class TugasKompensasiController extends Controller
         return view('admin.tugas_kompen.index', compact('dosens'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    
     public function create()
     {
-        //
+
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    
     public function store(Request $request)
     {
-        // dd($request);
         $validator = Validator::make($request->all(), [
             'id_dosen' => 'required|exists:users,id',
             'jumlah_mahasiswa' => 'required|integer|min:1',
             'deskripsi_kompensasi' => 'required|string|max:255',
-            'file_image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'file_image' => 'required|mimes:jpeg,png,jpg,webp,xlsx,xls,pdf,doc,docx|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -57,14 +50,35 @@ class TugasKompensasiController extends Controller
 
         DB::beginTransaction();
         try {
-            $filename = $request->file('file_image')->hashName(); // hash nama unik
-            $imagePath = $request->file('file_image')->storeAs('image_kompensasi', $filename, 'public');
+
+            $file = $request->file('file_image');
+            $fileExtension = $file->getClientOriginalExtension();
+
+
+            if (in_array($fileExtension, ['jpeg', 'png', 'jpg', 'webp'])) {
+                $folder = 'image_kompensasi';
+            } elseif (in_array($fileExtension, ['pdf'])) {
+                $folder = 'pdf_dokumen_kompensasi';
+            } elseif (in_array($fileExtension, ['doc', 'docx'])) {
+                $folder = 'word_dokumen_kompensasi';
+            } elseif (in_array($fileExtension, ['xls', 'xlsx'])) {
+                $folder = 'excel_dokumen_kompensasi';
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Format file tidak diizinkan'
+                ], 422);
+            }
+
+            $filename = $file->hashName();
+            $filePath = $file->storeAs($folder, $filename, 'public');
+
 
             TugasKompensasi::create([
                 'dosen_id' => $request->id_dosen,
                 'jumlah_mahasiswa' => $request->jumlah_mahasiswa,
                 'deskripsi_kompensasi' => $request->deskripsi_kompensasi,
-                'file_path' => $imagePath,
+                'file_path' => $filePath,
             ]);
 
             DB::commit();
@@ -85,9 +99,8 @@ class TugasKompensasiController extends Controller
     }
 
 
-    /**
-     * Display the specified resource.
-     */
+
+    
     public function show($id)
     {
         try {
@@ -106,17 +119,13 @@ class TugasKompensasiController extends Controller
     }
 
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+    
     public function edit(string $id)
     {
-        //
+
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+    
     public function update(Request $request, string $id)
     {
         DB::beginTransaction();
@@ -128,20 +137,41 @@ class TugasKompensasiController extends Controller
                 'id_dosen' => 'required|exists:users,id',
                 'jumlah_mahasiswa' => 'required|integer|min:1',
                 'deskripsi_kompensasi' => 'required|string',
-                'file_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+                'file_image' => 'nullable|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xlsx,xls|max:2048'
             ]);
 
+            // Menyimpan path file lama jika ada
             $oldFilePath = $kompensasi->file_path;
 
+            // Cek apakah ada file baru yang diunggah
             if ($request->hasFile('file_image')) {
+                // Jika file lama ada, hapus file lama
                 if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
                     Storage::disk('public')->delete($oldFilePath);
                 }
 
-                $path = $request->file('file_image')->store('image_kompensasi', 'public');
+                // Mendapatkan ekstensi file yang diunggah
+                $file = $request->file('file_image');
+                $fileExtension = $file->getClientOriginalExtension();
+                $folder = '';
+
+                // Tentukan folder penyimpanan berdasarkan ekstensi file
+                if (in_array($fileExtension, ['jpeg', 'png', 'jpg', 'webp'])) {
+                    $folder = 'image_kompensasi';
+                } elseif (in_array($fileExtension, ['pdf'])) {
+                    $folder = 'pdf_dokumen_kompensasi';
+                } elseif (in_array($fileExtension, ['doc', 'docx'])) {
+                    $folder = 'word_dokumen_kompensasi';
+                } elseif (in_array($fileExtension, ['xls', 'xlsx'])) {
+                    $folder = 'excel_dokumen_kompensasi';
+                }
+
+                // Menyimpan file baru dengan nama yang dihash
+                $path = $file->store($folder, 'public');
                 $kompensasi->file_path = $path;
             }
 
+            // Perbarui data kompensasi
             $kompensasi->dosen_id = $validated['id_dosen'];
             $kompensasi->jumlah_mahasiswa = $validated['jumlah_mahasiswa'];
             $kompensasi->deskripsi_kompensasi = $validated['deskripsi_kompensasi'];
@@ -163,26 +193,32 @@ class TugasKompensasiController extends Controller
     }
 
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
+    
     public function destroy(string $id)
     {
         DB::beginTransaction();
 
         try {
-            // Ambil data berdasarkan ID
-            $kompensasi = TugasKompensasi::findOrFail($id);
 
-            // Hapus file gambar jika ada (pakai unlink)
+            $kompensasi = TugasKompensasi::findOrFail($id);
             if ($kompensasi->file_path) {
                 $fullPath = public_path('storage/' . $kompensasi->file_path);
                 if (file_exists($fullPath)) {
-                    unlink($fullPath);
+                    $fileExtension = pathinfo($fullPath, PATHINFO_EXTENSION);
+
+                    if (in_array($fileExtension, ['jpeg', 'png', 'jpg', 'webp'])) {
+                        unlink($fullPath);
+                    } elseif (in_array($fileExtension, ['pdf'])) {
+                        unlink($fullPath);
+                    } elseif (in_array($fileExtension, ['doc', 'docx'])) {
+                        unlink($fullPath);
+                    } elseif (in_array($fileExtension, ['xls', 'xlsx'])) {
+                        unlink($fullPath);
+                    }
                 }
             }
 
-            // Hapus data dari database
             $kompensasi->delete();
 
             DB::commit();
@@ -199,6 +235,7 @@ class TugasKompensasiController extends Controller
             ], 500);
         }
     }
+
 
 
 

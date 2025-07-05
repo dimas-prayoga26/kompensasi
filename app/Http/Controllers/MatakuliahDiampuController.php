@@ -175,7 +175,15 @@ class MatakuliahDiampuController extends Controller
 
     public function datatable(Request $request)
     {
-        $data = DosenMatakuliah::with(['dosen.detailDosen', 'matakuliah.matakuliahSemesters', 'kelas', 'semesters'])->get();
+        if (auth()->user()->hasRole('Dosen')) {
+            $data = DosenMatakuliah::with(['dosen.detailDosen', 'matakuliah.matakuliahSemesters', 'kelas', 'semesters'])
+                ->whereHas('dosen', function($query) {
+                    $query->where('dosen_id', auth()->user()->id);
+                })
+                ->get();
+        } else {
+            return response()->json(['error' => 'Anda tidak memiliki akses'], 403);
+        }
 
         return datatables()->of($data)
             ->addColumn('dosen_name', function ($row) {
@@ -193,6 +201,7 @@ class MatakuliahDiampuController extends Controller
             })
             ->make(true);
     }
+
 
 
     public function select2Kelas(Request $request)

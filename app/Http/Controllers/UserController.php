@@ -299,7 +299,8 @@ class UserController extends Controller
         $query = User::with([
             'roles',
             'detailMahasiswa.prodi',
-            'detailDosen'
+            'detailDosen',
+            'kelasSemesterMahasiswas'  // Pastikan relasi ini dimuat
         ])->whereHas('roles', function ($q) use ($role) {
             $q->whereIn('name', ['Mahasiswa', 'Dosen']);
             if ($role) {
@@ -308,45 +309,28 @@ class UserController extends Controller
         });
 
         return datatables()->eloquent($query)
-            ->addColumn('nama_lengkap', function ($user) use ($role) {
-                $detail = $role === 'Dosen' ? $user->detailDosen : $user->detailMahasiswa;
+            ->addColumn('nama_lengkap', function ($user) {
+                $detail = $user->detailMahasiswa;
                 return trim(($detail->first_name ?? '') . ' ' . ($detail->last_name ?? ''));
             })
-            ->addColumn('kolom4', function ($user) use ($role) {
-                return $role === 'Dosen'
-                    ? $user->detailDosen->jabatan ?? null
-                    : $user->detailMahasiswa->tahun_masuk ?? null;
+            ->addColumn('kolom4', function ($user) {
+                // Cek apakah detailMahasiswa dan kelasSemesterMahasiswas ada
+                $tahunMasuk = $user->detailMahasiswa ? $user->detailMahasiswa->tahun_masuk : null;
+                $statusAktif = $user->kelasSemesterMahasiswas ? ($user->kelasSemesterMahasiswas->is_active == 1 ? 'Aktif' : 'Lulus') : 'Data Tidak Tersedia';
+                
+                // Gabungkan keduanya dalam format yang diinginkan
+                return "{$tahunMasuk} ({$statusAktif})";
             })
-            ->addColumn('kolom5', function ($user) use ($role) {
-                $detail = $role === 'Dosen' ? $user->detailDosen : $user->detailMahasiswa;
-                return $role === 'Dosen'
-                    ? ($detail->jenis_kelamin ?? null)
-                    : ($detail->kelas ?? null);
+            ->addColumn('kolom5', function ($user) {
+                return $user->detailMahasiswa->kelas ?? null;
             })
-
-            ->addColumn('kolom6', function ($user) use ($role) {
-                if ($role === 'Dosen') {
-                    return $user->detailDosen->bidang_keahlian ?? null;
-                }
-
+            ->addColumn('kolom6', function ($user) {
                 return $user->detailMahasiswa->prodi->nama ?? null;
             })
-
-            ->filterColumn('nama_lengkap', function ($query, $keyword) use ($role) {
-                $query->where(function ($q) use ($keyword, $role) {
-                    if ($role === 'Dosen') {
-                        $q->whereHas('detailDosen', function ($q2) use ($keyword) {
-                            $q2->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$keyword}%"]);
-                        });
-                    } else {
-                        $q->whereHas('detailMahasiswa', function ($q2) use ($keyword) {
-                            $q2->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$keyword}%"]);
-                        });
-                    }
-                });
-            })
             ->make(true);
-    }
+
+            }
+
 
     public function select2Kelas(Request $request)
     {

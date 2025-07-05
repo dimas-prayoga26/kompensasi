@@ -13,13 +13,12 @@ class SemesterSeeder extends Seeder
         $noSemester = 1;
         $tahunGanjil = $startTahun;
 
-        $targetAktifSemester = 11; // ini semester yang aktif
-        $targetCurrentAktifSemester = $targetAktifSemester - 2; // 2 semester sebelumnya
+        $targetAktifSemester = 11;
+        $targetCurrentAktifSemester = $targetAktifSemester - 2;
 
         while ($noSemester <= $targetAktifSemester) {
             $tahunAjaran = "{$tahunGanjil}/" . ($tahunGanjil + 1);
 
-            // Semester Ganjil
             $isAktifGanjil = ($noSemester === $targetAktifSemester);
             $isCurrentAktifGanjil = ($noSemester === $targetCurrentAktifSemester);
 
@@ -35,7 +34,6 @@ class SemesterSeeder extends Seeder
 
             if ($noSemester > $targetAktifSemester) break;
 
-            // Semester Genap
             $isAktifGenap = ($noSemester === $targetAktifSemester);
             $isCurrentAktifGenap = ($noSemester === $targetCurrentAktifSemester);
 

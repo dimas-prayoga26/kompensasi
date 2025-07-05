@@ -19,12 +19,6 @@
                         Jumlah Keseluruhan Kompensasi : {{ $totalKompensasi }} Menit
                     @endif
                 </div>
-
-                <div class="ms-3">
-                    <button type="button" class="btn btn-primary btn-sm">
-                        <i class="fe fe-dollar-sign me-1"></i> Bayar Kompensasi
-                    </button>
-                </div>
             </div>
         @endrole
 

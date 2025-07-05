@@ -113,8 +113,10 @@
 
                         <div class="mb-3">
                             <label for="tambah_file_image" class="form-label">Upload Gambar Pendukung (Opsional)</label>
-                            <input type="file" class="form-control" id="tambah_file_image" name="file_image" accept="image/*">
+                            <input type="file" class="form-control" id="tambah_file_image" name="file_image" 
+                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
                         </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary" id="simpanData">Simpan</button>
@@ -167,11 +169,19 @@
 
                         <div class="mb-3">
                             <label for="edit_file_image" class="form-label">Gambar Pendukung (Opsional)</label>
-                            <input type="file" class="form-control" id="edit_file_image" name="file_image" accept="image/*">
+                            <input type="file" class="form-control" id="edit_file_image" name="file_image" 
+                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
                             <small class="text-muted">Kosongkan jika tidak ingin mengubah gambar.</small>
                         </div>
 
+                        <!-- Preview Gambar -->
                         <img id="preview_edit_image" src="#" class="img-fluid my-2 d-none" style="max-height: 150px;">
+
+                        <!-- Preview Dokumen (PDF, Word, Excel) -->
+                        <div id="preview_edit_file" class="d-none my-2">
+                            <!-- Konten akan dimuat secara dinamis berdasarkan jenis file -->
+                        </div>
+
                     </div>
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary" id="updateData">Simpan Perubahan</button>
@@ -181,45 +191,6 @@
             </div>
         </div>
     </div>
-
-    <div class="modal fade" id="modalDetailData" tabindex="-1" aria-labelledby="modalDetailDataLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl"> <!-- Besar karena isinya tabel -->
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detail Mahasiswa Kompensasi</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                </div>
-                <div class="modal-body">
-                    <table class="table table-bordered" id="detailDatatable" width="100%">
-                        <thead>
-                            <tr>
-                                <th>No</th>
-                                <th>NIM</th>
-                                <th>Nama Mahasiswa</th>
-                                <th>Kelas</th>
-                                <th>Aksi</th> 
-                            </tr>
-                        </thead>
-                        <tbody></tbody> <!-- Akan diisi oleh DataTables -->
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Gambar -->
-    <div class="modal fade" id="modalImagePreview" tabindex="-1" aria-labelledby="modalImagePreviewLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-            <div class="modal-body text-center">
-                <img id="previewImage" src="" class="img-fluid" alt="Preview">
-            </div>
-            </div>
-        </div>
-    </div>
-
-
-
 </div>
 
 @endsection
@@ -227,9 +198,6 @@
 @section('js')
 
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-<script>
-    const currentUserRole = "{{ Auth::user()->getRoleNames()->first() }}";
-</script>
 
 
 
@@ -252,6 +220,22 @@
         var table;
 
         $(document).ready(function () {
+            // Menentukan role pengguna menggunakan Spatie
+            const currentUserRole = "{{ auth()->user()->getRoleNames()->first() }}"; // Mengambil role pertama dari koleksi role yang dimiliki pengguna
+            console.log(currentUserRole);
+
+            let columnsConfig = [
+                { data: null }, // No
+                { data: 'nama_dosen' },
+                { data: 'file_image' },
+                { data: 'jumlah_mahasiswa' },
+                { data: 'deskripsi_kompensasi' },
+            ];
+
+            if (currentUserRole != 'Mahasiswa') {
+                columnsConfig.push({ data: 'id' });
+            }
+
             table = $("#datatable").DataTable({
                 responsive: true,
                 processing: true,
@@ -270,8 +254,31 @@
                     {
                         targets: 2,
                         render: function (data, type, full, meta) {
-                            const imageUrl = `{{ asset('storage') }}/${full.file_path}`;
-                            return `<img src="${imageUrl}" width="50" height="50" style="object-fit: cover; cursor: pointer;" onclick="showImagePreview('${imageUrl}')">`;
+                            const filePath = full.file_path;
+                            const fileExtension = filePath.split('.').pop().toLowerCase();
+                            let filePreview = '';
+
+                            if (['jpeg', 'png', 'jpg', 'webp'].includes(fileExtension)) {
+                                const imageUrl = "{{ asset('storage') }}/" + filePath;
+                                filePreview = `
+                                    <a href="${imageUrl}" download>
+                                        <img src="${imageUrl}" width="50" height="50" style="object-fit: cover; cursor: pointer;" />
+                                    </a>
+                                `;
+                            } else if (['pdf'].includes(fileExtension)) {
+                                const pdfUrl = "{{ asset('storage') }}/" + filePath;
+                                filePreview = `<a href="${pdfUrl}" target="_blank" class="btn btn-sm btn-secondary">PDF</a>`;
+                            } else if (['doc', 'docx'].includes(fileExtension)) {
+                                const wordUrl = "{{ asset('storage') }}/" + filePath;
+                                filePreview = `<a href="${wordUrl}" target="_blank" class="btn btn-sm btn-primary">Word</a>`;
+                            } else if (['xls', 'xlsx'].includes(fileExtension)) {
+                                const excelUrl = "{{ asset('storage') }}/" + filePath;
+                                filePreview = `<a href="${excelUrl}" target="_blank" class="btn btn-sm btn-success">Excel</a>`;
+                            } else {
+                                filePreview = '-';
+                            }
+
+                            return filePreview;
                         }
                     },
                     {
@@ -289,17 +296,8 @@
                     {
                         targets: 5,
                         render: function (data, type, full, meta) {
-                            if (currentUserRole === 'Mahasiswa') {
+                            if (currentUserRole !== 'Mahasiswa') {
                                 return `
-                                    <button type="button" class="btn btn-success btn-sm" onclick="pilihData(${full.id})">
-                                        <i class="fe fe-check"></i> Pilih
-                                    </button>
-                                `;
-                            } else {
-                                return `
-                                    <button type="button" class="btn btn-info btn-sm" onclick="detailData(${full.id})">
-                                        <i class="fe fe-eye"></i> Detail
-                                    </button>
                                     <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
                                         <i class="fe fe-edit"></i> Edit
                                     </button>
@@ -308,175 +306,28 @@
                                     </button>
                                 `;
                             }
+                            return '';
                         }
                     }
-
                 ],
-                columns: [
-                    { data: null }, // No
-                    { data: 'nama_dosen' },
-                    { data: 'file_image' },
-                    { data: 'jumlah_mahasiswa' },
-                    { data: 'deskripsi_kompensasi' },
-                    { data: 'id' }
-                ],
+                columns: columnsConfig,
                 language: {
                     searchPlaceholder: 'Search...',
                     sSearch: ''
                 }
             });
+
+            if (currentUserRole === 'Mahasiswa') {
+                table.column(5).visible(false);
+            }
         });
+
+
+
 
         function showImagePreview(url) {
             $("#previewImage").attr("src", url);
             $("#modalImagePreview").modal("show");
-        }
-
-       function detailData(id) {
-            $('#modalDetailData').modal('show');
-
-            // Jika datatable sudah pernah dibuat, hancurkan dulu agar tidak duplikat
-            if ($.fn.DataTable.isDataTable('#detailDatatable')) {
-                $('#detailDatatable').DataTable().destroy();
-            }
-
-            // Buat datatable detail
-            $('#detailDatatable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: `/portal/tugas-kompensasi/${id}/detail`,
-                    type: 'GET'
-                },
-                columns: [
-                    { data: null, name: 'no', render: (data, type, row, meta) => meta.row + 1 },
-                    { data: 'nim', name: 'nim' },
-                    { data: 'nama_mahasiswa', name: 'nama_mahasiswa' },
-                    { data: 'kelas', name: 'kelas' },
-                    {
-                        data: 'id',
-                        name: 'id',
-                        render: function (data, type, row) {
-                            return `
-                                <button class="btn btn-danger btn-sm" onclick="hapusMahasiswa(${data})">
-                                    <i class="fe fe-trash"></i> Hapus
-                                </button>
-                            `;
-                        }
-                    }
-                ]
-            });
-        }
-
-        function hapusMahasiswa(id) {
-            // Sembunyikan modal agar Swal muncul di atas
-            $('#modalDetailData').modal('hide');
-
-            setTimeout(() => {
-                Swal.fire({
-                    title: 'Yakin ingin menghapus?',
-                    text: 'Data mahasiswa akan dihapus dari program kompensasi ini.',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal',
-                    reverseButtons: true
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: `/portal/tugas-kompensasi/detail/${id}`,
-                            type: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                            },
-                            success: function (response) {
-                                if (response.status) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Berhasil',
-                                        text: response.message,
-                                        timer: 2000,
-                                        showConfirmButton: false
-                                    });
-
-                                    $('#detailDatatable').DataTable().ajax.reload(null, false);
-                                } else {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Gagal',
-                                        text: response.message
-                                    });
-
-                                    $('#modalDetailData').modal('show');
-                                }
-                            },
-                            error: function (xhr) {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Gagal',
-                                    text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghapus data.'
-                                });
-
-                                $('#modalDetailData').modal('show');
-                            }
-                        });
-                    } else {
-                        // Jika batal, tampilkan lagi modal detail
-                        $('#modalDetailData').modal('show');
-                    }
-                });
-            }, 300); // Tunggu 300ms agar modal Bootstrap sempat tertutup dulu
-        }
-
-        function pilihData(kompensasiId) {
-            Swal.fire({
-                title: 'Yakin ingin mendaftar?',
-                text: 'Anda akan bergabung dalam tugas kompensasi ini.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: 'Ya, Pilih',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: '/portal/tugas-kompensasi/pilih',
-                        type: 'POST',
-                        data: {
-                            kompensasi_id: kompensasiId
-                        },
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        },
-                        success: function (response) {
-                            if (response.status) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Berhasil',
-                                    text: response.message,
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                });
-
-                                // Reload datatable jika perlu
-                                $('#datatable').DataTable().ajax.reload();
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Gagal',
-                                    text: response.message
-                                });
-                            }
-                        },
-                        error: function (xhr) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Gagal',
-                                text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memilih data.'
-                            });
-                        }
-                    });
-                }
-            });
         }
 
 
@@ -556,18 +407,40 @@
                 success: function(response) {
                     if (response.status === true) {
                         const tugasKompensasi = response.data;
-                        // console.log(tugasKompensasi.id);
-                        
+
                         $('#edit_id_kompensasi').val(tugasKompensasi.id);
                         $('#edit_id_dosen').val(tugasKompensasi.dosen_id).trigger('change');
                         $('#edit_jumlah_mahasiswa').val(tugasKompensasi.jumlah_mahasiswa);
                         $('#edit_deskripsi').val(tugasKompensasi.deskripsi_kompensasi);
 
+                        // Cek apakah ada file yang diupload
                         if (tugasKompensasi.file_path) {
-                            const imageUrl = `{{ asset('storage') }}/${tugasKompensasi.file_path}`;
-                            $("#preview_edit_image").attr("src", imageUrl).removeClass("d-none");
+                            const fileExtension = tugasKompensasi.file_path.split('.').pop().toLowerCase();
+                            const fileUrl = `{{ asset('storage') }}/${tugasKompensasi.file_path}`;
+                            
+                            // Menyesuaikan tampilan berdasarkan jenis file
+                            if (['jpeg', 'png', 'jpg', 'webp'].includes(fileExtension)) {
+                                // Jika gambar, tampilkan gambar
+                                $("#preview_edit_image").attr("src", fileUrl).removeClass("d-none");
+                                $("#preview_edit_image").show();
+                                $("#preview_edit_file").hide(); // Sembunyikan preview file lainnya
+                            } else if (['pdf'].includes(fileExtension)) {
+                                // Jika PDF, tampilkan tombol untuk membuka PDF
+                                $("#preview_edit_image").hide();
+                                $("#preview_edit_file").html(`<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-secondary">Buka PDF</a>`).removeClass("d-none");
+                            } else if (['doc', 'docx'].includes(fileExtension)) {
+                                // Jika Word, tampilkan tombol untuk membuka Word
+                                $("#preview_edit_image").hide();
+                                $("#preview_edit_file").html(`<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-primary">Buka Word</a>`).removeClass("d-none");
+                            } else if (['xls', 'xlsx'].includes(fileExtension)) {
+                                // Jika Excel, tampilkan tombol untuk membuka Excel
+                                $("#preview_edit_image").hide();
+                                $("#preview_edit_file").html(`<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-success">Buka Excel</a>`).removeClass("d-none");
+                            } else {
+                                $("#preview_edit_image").hide();
+                                $("#preview_edit_file").hide();
+                            }
                         }
-
 
                         $('#modalEditData').modal('show');
                     } else {
@@ -587,6 +460,7 @@
                 }
             });
         }
+
 
 
         $("#updateData").on("click", function(e) {

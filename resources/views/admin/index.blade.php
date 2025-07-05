@@ -65,7 +65,12 @@
                     <div class="row">
                 @endif
 
-                <div class="{{ $colClass }} col-md-6 col-12 mb-4">
+                @php
+                    // Menambahkan margin-top jika semester lebih dari 4
+                    $marginTopClass = $semester > 4 ? 'mt-4' : '';
+                @endphp
+
+                <div class="{{ $colClass }} col-md-6 col-12 mb-4 {{ $marginTopClass }}">
                     <div class="card h-100">
                         <div class="card-body">
                             <span class="fw-semibold d-block mb-1">Jumlah Kompensasi Semester {{ $semester }}</span>
@@ -79,6 +84,7 @@
                 @endif
             @endforeach
         @endif
+
         {{-- Untuk Dosen --}}
         @role('Dosen')
         <!-- Jumlah Dosen -->
@@ -105,12 +111,6 @@
                     <div class="d-flex justify-content-between align-items-center p-3">
                         <div class="d-flex align-items-center">
                             <h5 class="mb-0 me-3">Detail kompensasi</h5>
-                            <select id="filterSemester" class="form-select" style="width: 200px;">
-                                <option selected disabled>Pilih Semester</option>
-                                @for ($i = 1; $i <= $lamaStudi; $i++)
-                                    <option value="{{ $i }}">Semester {{ $i }}</option>
-                                @endfor
-                            </select>
                         </div>
                     </div>
 
@@ -123,6 +123,7 @@
                                             <th>No.</th>
                                             <th>Nama Matkul</th>
                                             <th>Jumlah Kompen</th>
+                                            <th>Semester</th>
                                             <th>Keterangan</th>
                                         </tr>
                                     </thead>
@@ -164,6 +165,7 @@
                                         <tr>
                                             <th>No.</th>
                                             <th>Nama</th>
+                                            <th>Angkatan</th>
                                             <th>Jumlah Kompen</th>
                                         </tr>
                                     </thead>
@@ -208,14 +210,12 @@
                 autoWidth: false,
                 ajax: {
                     url: "{{ route('mahasiswa.dashboard.datatable') }}",
-                    data: function (d) {
-                        d.semester = $('#filterSemester').val();
-                    }
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'nama_matakuliah' },
                     { data: 'menit_kompensasi' },
+                    { data: 'semester' },
                     { data: 'keterangan' },
                 ],
                 columnDefs: [{
@@ -251,6 +251,7 @@
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'mahasiswa' },
+                    { data: 'angkatan' },
                     { data: 'jumlah' },
                 ],
                 columnDefs: [{

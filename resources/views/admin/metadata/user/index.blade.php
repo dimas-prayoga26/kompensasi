@@ -336,8 +336,8 @@
             });
             headerHtml += '</tr>';
 
-            $('#datatable thead').html(headerHtml); // Replace thead
-            $('#datatable tbody').html('');         // Optional: bersihkan tbody
+            $('#datatable thead').html(headerHtml);
+            $('#datatable tbody').html('');
         }
 
         function initDataTable(role = '') {
@@ -379,9 +379,22 @@
                     {
                         targets: 3,
                         render: function (data, type, full, meta) {
-                            return isDosen
-                                ? (full.detail_dosen?.jabatan ?? '<span class="badge bg-danger">Data belum lengkap</span>')
-                                : (full.detail_mahasiswa?.tahun_masuk ?? '<span class="badge bg-danger">Data belum lengkap</span>');
+                            console.log(data);  // Untuk debugging
+                            
+                            if (isDosen) {
+                                return full.detail_dosen?.jabatan ?? '<span class="badge bg-danger">Data belum lengkap</span>';
+                            } else {
+                                const detailMahasiswa = full.detail_mahasiswa;
+                                const kelasSemester = full.kelas_semester_mahasiswas;
+
+                                if (detailMahasiswa && kelasSemester) {
+                                    const tahunMasuk = detailMahasiswa.tahun_masuk;
+                                    const statusAktif = kelasSemester.is_active === 1 ? 'Aktif' : 'Lulus';
+                                    return `${tahunMasuk} (${statusAktif})`;
+                                }
+
+                                return '<span class="badge bg-danger">Data belum lengkap</span>';
+                            }
                         }
                     },
                     {
