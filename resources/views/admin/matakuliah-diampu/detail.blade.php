@@ -44,8 +44,15 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Detail Kompensasi - {{ $dosenMatakuliah->matakuliah->nama }} / {{ $dosenMatakuliah->kelas->nama }}</h5>
-                    <a href="{{ route('matakuliah-diampu.index') }}" class="btn btn-sm btn-secondary">← Kembali</a>
+                    
+                    <div class="d-flex">
+                        <a href="{{ route('matakuliah-diampu.kompensasi.exportExcel', $dosenMatakuliah->id) }}" class="btn btn-sm btn-success"  style="margin-right: 10px;">
+                            <i class="bx bx-download"></i> Download Excel
+                        </a>
+                        <a href="{{ route('matakuliah-diampu.index') }}" class="btn btn-sm btn-secondary">← Kembali</a>
+                    </div>
                 </div>
+
                 <div class="card-body table-responsive">
                     <table id="datatable" class="table table-bordered text-nowrap w-100">
                         <thead>

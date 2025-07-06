@@ -10,8 +10,11 @@ use App\Models\Matakuliah;
 use App\Models\DetailDosen;
 use Illuminate\Http\Request;
 use App\Models\DosenMatakuliah;
+use App\Exports\KompensasiExport;
 use App\Models\MatakuliahSemester;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\TugasKompensasiExport;
 use App\Models\KelasSemesterMahasiswa;
 
 class MatakuliahDiampuController extends Controller
@@ -493,7 +496,6 @@ class MatakuliahDiampuController extends Controller
             $semesterLokal = optional($dosenMatakuliah->kompensasis->first())->semester_lokal;
             $kelasId = $dosenMatakuliah->kelas_id;
 
-            // Mahasiswa aktif di kelas dan semester lokal
             $mahasiswaAktif = KelasSemesterMahasiswa::where('kelas_id', $kelasId)
                 ->where('semester_lokal', $semesterLokal)
                 ->where('is_active', 1)
@@ -533,6 +535,16 @@ class MatakuliahDiampuController extends Controller
                 'message' => 'Gagal menambahkan data kompensasi: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function exportExcel($id)
+    {
+        $dosenMatakuliah = DosenMatakuliah::with(['matakuliah', 'kelas', 'kompensasis'])
+                                        ->findOrFail($id);
+        // dd($dosenMatakuliah);
+        
+        return Excel::download(new KompensasiExport($dosenMatakuliah), 'Daftar_Mahasiswa_Kompen_' . $dosenMatakuliah->matakuliah->nama . '.xlsx');
+
     }
 
 

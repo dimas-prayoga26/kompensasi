@@ -76,6 +76,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/matakuliah-diampu/kompensasi/{id}', [MatakuliahDiampuController::class, 'show'])->name('matakuliah-diampu.kompensasi.show');
         Route::get('/matakuliah-diampu/kompensasi/{id}/detail', [MatakuliahDiampuController::class, 'kompensasiDetail'])->name('matakuliah-diampu.kompensasi.detail');
         Route::put('/matakuliah-diampu/kompensasi/{id}/update', [MatakuliahDiampuController::class, 'kompensasiUpdate'])->name('matakuliah-diampu.kompensasi.update');
+        Route::get('/matakuliah-diampu/kompensasi/excel/{id}', [MatakuliahDiampuController::class, 'exportExcel'])->name('matakuliah-diampu.kompensasi.exportExcel');
         Route::get("/matakuliah-diampu/kompensasi/{id}/datatable", [MatakuliahDiampuController::class, "datatableKompensasi"])->name("matakuliah-diampu.kompensasi.datatableKompensasi");
         Route::resource('matakuliah-diampu', MatakuliahDiampuController::class);
 
