@@ -52,7 +52,7 @@ class User extends Authenticatable
 
     public function detailDosen()
     {
-        return $this->hasOne(DetailDosen::class);
+        return $this->hasOne(DetailDosen::class, 'user_id');
     }
 
     public function kelasSemesterMahasiswas()

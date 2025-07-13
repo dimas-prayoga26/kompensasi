@@ -44,6 +44,7 @@ Route::middleware(['web', 'auth'])->group(function () {
 
         Route::get("/mahasiswa/dashboard/datatable", [DashboardController::class, "mahasiswaDashboardDatatable"])->name("mahasiswa.dashboard.datatable");
         Route::get('/admin/dashboard/datatable', [DashboardController::class, 'adminDashboardDatatable'])->name('admin.dashboard.datatable');
+        Route::get('/admin/export-kompen', [DashboardController::class, 'exportKompensasi'])->name('admin.dashboard.export-kompen');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

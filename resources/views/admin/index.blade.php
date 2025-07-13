@@ -66,7 +66,6 @@
                 @endif
 
                 @php
-                    // Menambahkan margin-top jika semester lebih dari 4
                     $marginTopClass = $semester > 4 ? 'mt-4' : '';
                 @endphp
 
@@ -146,7 +145,7 @@
                     <div class="d-flex justify-content-between align-items-center p-3">
                         <div class="d-flex align-items-center">
                             <h5 class="mb-0 me-3">Detail kompen mahasiswa akhir semester, kelas</h5>
-                            <select id="filterKelas" class="form-select" style="width: 200px;">
+                            <select id="filterKelas" class="form-select me-2" style="width: 200px;">
                                 <option selected disabled>Pilih Kelas</option>
                                 @foreach ($kelasAkhir as $kelas)
                                     <option value="{{ $kelas->id }}">
@@ -154,6 +153,9 @@
                                     </option>
                                 @endforeach
                             </select>
+                            <button type="button" id="exportBtn" class="btn btn-success">
+                                <i class="fa fa-file-excel"></i> Export
+                            </button>
                         </div>
                     </div>
 
@@ -269,6 +271,43 @@
             // Reload jika kelas atau semester berubah
             $('#filterKelas, #filterSemester').change(function () {
                 table.ajax.reload();
+            });
+
+            $("#exportBtn").on("click", function () {
+                let kelasId = $("#filterKelas").val();
+
+                console.log(kelasId);
+                
+
+                if (!kelasId) {
+                    alert("Silakan pilih kelas terlebih dahulu.");
+                    return;
+                }
+
+                $.ajax({
+                    url: "{{ route('admin.dashboard.export-kompen') }}",
+                    type: 'GET',
+                    data: { kelas_id: kelasId },
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Export Berhasil!',
+                            text: 'Data telah berhasil diexport.',
+                        });
+
+                        var link = document.createElement('a');
+                        link.href = response.fileUrl;
+                        link.download = response.fileName;
+                        link.click();
+                    },
+                    error: function(xhr, status, error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: 'Terjadi kesalahan saat mengekspor data.',
+                        });
+                    }
+                });
             });
         }
 

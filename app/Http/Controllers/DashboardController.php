@@ -9,7 +9,9 @@ use App\Models\Kompensasi;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Models\KelasSemesterMahasiswa;
+use App\Exports\RekapKompensasiAllSemester;
 
 class DashboardController extends Controller
 {
@@ -54,13 +56,11 @@ class DashboardController extends Controller
             }
 
         } elseif ($user->hasRole('superAdmin')) {
-            // Ambil kelas akhir
             $kelasAkhir = Kelas::where(function ($query) {
                 $query->where('nama', 'like', 'TI3%')
                     ->orWhere('nama', 'like', 'RPL4%');
             })->get();
 
-            // Hitung jumlah mahasiswa aktif & tidak aktif
             $mahasiswaAktif = KelasSemesterMahasiswa::where('is_active', true)
                 ->distinct('user_id')
                 ->count('user_id');
@@ -139,27 +139,33 @@ class DashboardController extends Controller
             return DataTables::of([])->make(true);
         }
 
-        // Ambil nama kelas berdasarkan ID
         $kelas = Kelas::find($kelasId);
         if (!$kelas) {
             return DataTables::of([])->make(true);
         }
 
-        $namaKelas = $kelas->nama; // contoh: TI3A, RPL4B
+        $namaKelas = $kelas->nama;
 
-        // Ambil semester aktif
         $semesterAktif = Semester::where('aktif', true)->first();
         if (!$semesterAktif) {
             return DataTables::of([])->make(true);
         }
 
+        $tahunAjaranPalingLama = Semester::orderBy('tahun_ajaran', 'asc')->first()->tahun_ajaran;
+
         $tahunSekarang = intval(substr($semesterAktif->tahun_ajaran, 0, 4));
+
         $tipeSemester = strtolower($semesterAktif->semester);
-        $semesterBerjalan = ($tahunSekarang - 2000) * 2 + ($tipeSemester === 'genap' ? 2 : 1);
+
+        $tahunAwal = intval(substr($tahunAjaranPalingLama, 0, 4));
+        $semesterBerjalan = ($tahunSekarang - $tahunAwal) * 2 + ($tipeSemester === 'genap' ? 2 : 1);
 
         $mahasiswa = User::role('Mahasiswa')
             ->whereHas('detailMahasiswa', function ($query) use ($namaKelas) {
                 $query->where('kelas', $namaKelas);
+            })
+            ->whereHas('kelasSemesterMahasiswas', function ($query) {
+                $query->where('is_active', true);
             })
             ->with('detailMahasiswa.prodi')
             ->get();
@@ -173,7 +179,12 @@ class DashboardController extends Controller
 
             $tahunMasuk = $detail->tahun_masuk;
             $lamaStudi = $detail->prodi->lama_studi;
+
             $semesterMax = min($semesterBerjalan, $lamaStudi);
+            
+            if ($semesterBerjalan < $lamaStudi) {
+                return null;
+            }
 
             $totalKompensasi = Kompensasi::where('user_id', $user->id)
                 ->whereBetween('semester_lokal', [1, $semesterMax])
@@ -190,5 +201,61 @@ class DashboardController extends Controller
             ->addIndexColumn()
             ->make(true);
     }
+
+    public function exportKompensasi(Request $request)
+    {
+        $kelasId = $request->input('kelas_id');
+
+        $kelas = Kelas::find($kelasId);
+        if (!$kelas) {
+            return response()->json(['error' => 'Kelas tidak ditemukan'], 404);
+        }
+
+        $namaKelas = $kelas->nama;
+
+        $semesterAktif = Semester::where('aktif', true)->first();
+        if (!$semesterAktif) {
+            return response()->json(['error' => 'Semester aktif tidak ditemukan'], 404);
+        }
+
+        $tahunAwal = intval(substr(Semester::orderBy('tahun_ajaran', 'asc')->first()->tahun_ajaran, 0, 4));
+
+        $tahunSekarang = intval(substr($semesterAktif->tahun_ajaran, 0, 4));
+
+        $tipeSemester = strtolower($semesterAktif->semester);
+
+        $semesterBerjalan = ($tahunSekarang - $tahunAwal) * 2 + ($tipeSemester === 'genap' ? 2 : 1);
+
+        $mahasiswa = User::role('Mahasiswa')
+            ->whereHas('detailMahasiswa', function ($query) use ($namaKelas) {
+                $query->where('kelas', $namaKelas);
+            })
+            ->whereHas('kelasSemesterMahasiswas', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->with('detailMahasiswa.prodi')
+            ->get();
+
+        $export = new RekapKompensasiAllSemester($mahasiswa, $semesterBerjalan);
+        $fileName = 'rekap_kompensasi_mahasiswa_' . strtolower(str_replace(' ', '_', $kelas->nama)) . '.xlsx';
+
+        $folderPath = 'rekap_kompensasi_akhir_semester';
+
+        $filePath = $folderPath . '/' . $fileName;
+
+        $storagePath = storage_path('app/public/' . $folderPath);
+
+        if (!file_exists($storagePath)) {
+            mkdir($storagePath, 0777, true);
+        }
+
+        Excel::store($export, $filePath, 'public');
+
+        return response()->json([
+            'fileUrl' => asset('storage/' . $filePath),
+            'fileName' => $fileName,
+        ]);
+    }
+
 
 }

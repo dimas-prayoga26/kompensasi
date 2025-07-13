@@ -24,8 +24,12 @@ class MatakuliahDiampuController extends Controller
      */
     public function index()
     {
-        return view('admin.matakuliah-diampu.index');
+        $dosen = User::role('Dosen')->with('detailDosen')->get();
+
+        return view('admin.matakuliah-diampu.index', compact('dosen'));
     }
+
+
 
     /**
      * Show the form for creating a new resource.
@@ -177,33 +181,59 @@ class MatakuliahDiampuController extends Controller
 
 
     public function datatable(Request $request)
-    {
-        if (auth()->user()->hasRole('Dosen')) {
-            $data = DosenMatakuliah::with(['dosen.detailDosen', 'matakuliah.matakuliahSemesters', 'kelas', 'semesters'])
-                ->whereHas('dosen', function($query) {
-                    $query->where('dosen_id', auth()->user()->id);
-                })
-                ->get();
-        } else {
-            return response()->json(['error' => 'Anda tidak memiliki akses'], 403);
+{
+    // Jika pengguna adalah Dosen
+    if (auth()->user()->hasRole('Dosen')) {
+        $data = DosenMatakuliah::with([
+            'dosen.detailDosen', 
+            'matakuliah.matakuliahSemesters', 
+            'kelas', 
+            'semesters'
+        ])
+        ->whereHas('dosen', function($query) {
+            $query->where('user_id', auth()->user()->id); // Filter berdasarkan user_id dosen yang sedang login
+        })
+        ->get();
+    } elseif (auth()->user()->hasRole('superAdmin')) {
+        // SuperAdmin bisa melihat semua data, dengan filter jika ada
+        $data = DosenMatakuliah::with([
+            'dosen.detailDosen', 
+            'matakuliah.matakuliahSemesters', 
+            'kelas', 
+            'semesters'
+        ]);
+
+        // Jika ada filter dosen_id dari frontend, terapkan filter tersebut
+        if ($request->has('dosen_id') && $request->dosen_id != '') {
+            $data->whereHas('dosen', function($query) use ($request) {
+                $query->where('dosen_id', $request->dosen_id); // Filter berdasarkan dosen_id
+            });
         }
 
-        return datatables()->of($data)
-            ->addColumn('dosen_name', function ($row) {
-                $detail = $row->dosen->detailDosen;
-                return $detail ? $detail->first_name . ' ' . $detail->last_name : 'Nama Dosen Tidak Ditemukan';
-            })
-            ->addColumn('matakuliah_name', function ($row) {
-                return $row->matakuliah ? $row->matakuliah->nama : 'Matakuliah Tidak Ditemukan';
-            })
-            ->addColumn('kelas_name', function ($row) {
-                return $row->kelas ? $row->kelas->nama : 'Kelas Tidak Ditemukan';
-            })
-            ->addColumn('semester_lokal', function ($row) {
-                return optional($row->matakuliah->matakuliahSemesters)->semester_lokal ?? 'Semester Lokal Tidak Ditemukan';
-            })
-            ->make(true);
+        $data = $data->get(); // Ambil data setelah filter
+    } else {
+        return response()->json(['error' => 'Anda tidak memiliki akses'], 403);
     }
+
+    return datatables()->of($data)
+        ->addColumn('dosen_name', function ($row) {
+            $detail = $row->dosen->detailDosen;
+            return $detail ? $detail->first_name . ' ' . $detail->last_name : 'Nama Dosen Tidak Ditemukan';
+        })
+        ->addColumn('matakuliah_name', function ($row) {
+            return $row->matakuliah ? $row->matakuliah->nama : 'Matakuliah Tidak Ditemukan';
+        })
+        ->addColumn('kelas_name', function ($row) {
+            return $row->kelas ? $row->kelas->nama : 'Kelas Tidak Ditemukan';
+        })
+        ->addColumn('semester_lokal', function ($row) {
+            return optional($row->matakuliah->matakuliahSemesters)->semester_lokal ?? 'Semester Lokal Tidak Ditemukan';
+        })
+        ->make(true);
+}
+
+
+
 
 
 
@@ -226,22 +256,29 @@ class MatakuliahDiampuController extends Controller
 
     public function select2Dosen(Request $request)
     {
-        $query = $request->get('q');
+        $searchTerm = $request->get('q');
 
         $dosen = User::role('Dosen')
-            ->where('nip', 'like', "%{$query}%")
+            ->with('detailDosen')
+            ->where(function ($subQuery) use ($searchTerm) {
+                $subQuery->where('nip', 'like', "%{$searchTerm}%")
+                        ->orWhereHas('detailDosen', function($innerQuery) use ($searchTerm) {
+                            $innerQuery->where('first_name', 'like', "%{$searchTerm}%")
+                                        ->orWhere('last_name', 'like', "%{$searchTerm}%");
+                        });
+            })
             ->get();
 
         $results = $dosen->map(function ($user) {
+            $fullName = $user->detailDosen ? $user->detailDosen->first_name . ' ' . $user->detailDosen->last_name : 'Data Tidak Tersedia';
             return [
                 'id' => $user->id,
-                'text' => $user->nip
+                'text' => $fullName . ' - ' . $user->nip 
             ];
         });
 
         return response()->json(['results' => $results]);
     }
-
 
     public function select2Matakuliah(Request $request)
     {

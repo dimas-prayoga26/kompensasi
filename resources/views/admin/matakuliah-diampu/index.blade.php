@@ -76,12 +76,33 @@
       <div class="col-lg-12 mb-4 order-0">
           <div class="card">
             <div class="d-flex justify-content-between align-items-center p-3">
-                  <h5 class="mb-0">Daftar matakuliah yang diampu</h5>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahData">
-                    + Tambah Data
-                    </button>
+                <h5 class="mb-0">Daftar matakuliah yang diampu</h5>
 
-              </div>
+                <div class="d-flex align-items-center">
+                    <!-- Tampilkan filter hanya untuk superAdmin -->
+                    @if(auth()->user()->hasRole('superAdmin'))
+                        <select class="form-select w-auto me-2" aria-label="Pilih Dosen" id="dosen-filter">
+                            <option selected>Pilih Dosen</option>
+                            @foreach($dosen as $d)
+                                <option value="{{ $d->id }}">
+                                    @if($d->detailDosen)
+                                        {{ $d->detailDosen->first_name }} {{ $d->detailDosen->last_name }} - {{ $d->nip }}
+                                    @else
+                                        {{ $d->nip }} - Data Tidak Tersedia
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                    @endif
+
+                    <!-- Tombol di sebelah kanan -->
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahData">
+                        + Tambah Data
+                    </button>
+                </div>
+
+            </div>
+
               <div class="d-flex align-items-end row">
                   <div class="col-sm-12">
                       <div class="card-body">
@@ -305,13 +326,21 @@
 
         });
 
-        table = $("#datatable").DataTable({
+        var table = $("#datatable").DataTable({
             responsive: true,
             processing: true,
             serverSide: true,
             autoWidth: false,
             ajax: {
                 url: "{{ route('matakuliah-diampu.datatable') }}",
+                data: function(d) {
+                    var dosenFilter = $('#dosen-filter').val();
+                    if (dosenFilter && dosenFilter !== "Pilih Dosen") {
+                        d.dosen_id = dosenFilter;
+                    } else {
+                        d.dosen_id = '';
+                    }
+                }
             },
             columnDefs: [
                 {
@@ -323,8 +352,6 @@
                 {
                     targets: 5,
                     render: function (data, type, full, meta) {
-                        console.log(full);
-                        
                         return `
                             <div class="d-flex flex-column gap-1">
                                 <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
@@ -340,10 +367,9 @@
                 {
                     targets: 6,
                     render: function (data, type, full, meta) {
-                        
                         return `
                             <div class="d-flex flex-column gap-1">
-                            <a href="/portal/matakuliah-diampu/kompensasi/${full.id}" class="btn btn-info btn-sm">
+                                <a href="/portal/matakuliah-diampu/kompensasi/${full.id}" class="btn btn-info btn-sm">
                                     <i class="fe fe-eye"></i> Detail
                                 </a>
                                 <button type="button" class="btn btn-danger btn-sm" onclick="hapusData(${full.id})">
@@ -368,6 +394,11 @@
                 sSearch: ''
             }
         });
+
+        $('#dosen-filter').on('change', function() {
+            table.ajax.reload();
+        });
+
     });
 
     $("#simpanData").on("click", function (e) {

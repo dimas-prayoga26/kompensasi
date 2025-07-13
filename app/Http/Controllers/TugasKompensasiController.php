@@ -24,6 +24,8 @@ class TugasKompensasiController extends Controller
         return view('admin.tugas_kompen.index', compact('dosens'));
     }
 
+
+
     
     public function create()
     {
@@ -64,10 +66,8 @@ class TugasKompensasiController extends Controller
                 ], 404);
             }
 
-            // Format nama dosen menjadi 'first_name_last_name'
             $dosenName = $dosen->first_name . '_' . $dosen->last_name;
 
-            // Tentukan folder penyimpanan berdasarkan ekstensi file
             if (in_array($fileExtension, ['jpeg', 'png', 'jpg', 'webp'])) {
                 $folder = 'image_kompensasi';
             } elseif (in_array($fileExtension, ['pdf'])) {
@@ -83,14 +83,11 @@ class TugasKompensasiController extends Controller
                 ], 422);
             }
 
-            // Dapatkan nama file asli dan format nama baru dengan format '(NAMAFILE)_(NAMADOSEN)'
             $originalFileName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $newFileName = $originalFileName . '_' . $dosenName . '.' . $fileExtension;
 
-            // Simpan file dengan nama baru
             $filePath = $file->storeAs($folder, $newFileName, 'public');
 
-            // Simpan data tugas kompensasi
             TugasKompensasi::create([
                 'dosen_id' => $request->id_dosen,
                 'jumlah_mahasiswa' => $request->jumlah_mahasiswa,
@@ -266,10 +263,15 @@ class TugasKompensasiController extends Controller
     public function datatable(Request $request)
     {
         $userId = auth()->user()->id;
+        $role = auth()->user()->getRoleNames()->first();
 
-        $data = TugasKompensasi::with('dosen.detailDosen')
-            ->where('dosen_id', $userId)
-            ->get();
+        if ($role === 'superAdmin') {
+            $data = TugasKompensasi::with('dosen.detailDosen')->get();
+        } else {
+            $data = TugasKompensasi::with('dosen.detailDosen')
+                ->where('dosen_id', $userId)
+                ->get();
+        }
 
         return DataTables::of($data)
             ->addColumn('nama_dosen', function ($row) {
@@ -278,6 +280,7 @@ class TugasKompensasiController extends Controller
             })
             ->make(true);
     }
+
 
 
 

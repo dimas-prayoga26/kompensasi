@@ -93,13 +93,15 @@
                                     @foreach ($dosens as $dosen)
                                         @if ($dosen->detailDosen)
                                             <option value="{{ $dosen->id }}">
-                                                {{ $dosen->detailDosen->first_name }} {{ $dosen->detailDosen->last_name }}
+                                                {{ $dosen->detailDosen->first_name }} {{ $dosen->detailDosen->last_name }} - {{ $dosen->nip }}
                                             </option>
                                         @endif
                                     @endforeach
                                 </select>
                             </div>
                         @endif
+
+
 
                         <div class="mb-3">
                             <label for="tambah_jumlah_mahasiswa" class="form-label">Jumlah Mahasiswa</label>
@@ -149,7 +151,7 @@
                                     @foreach ($dosens as $dosen)
                                         @if ($dosen->detailDosen)
                                             <option value="{{ $dosen->id }}">
-                                                {{ $dosen->detailDosen->first_name }} {{ $dosen->detailDosen->last_name }}
+                                                 {{ $dosen->detailDosen->first_name }} {{ $dosen->detailDosen->last_name }} - {{ $dosen->nip }}
                                             </option>
                                         @endif
                                     @endforeach
@@ -220,8 +222,7 @@
         var table;
 
         $(document).ready(function () {
-            // Menentukan role pengguna menggunakan Spatie
-            const currentUserRole = "{{ auth()->user()->getRoleNames()->first() }}"; // Mengambil role pertama dari koleksi role yang dimiliki pengguna
+            const currentUserRole = "{{ auth()->user()->getRoleNames()->first() }}";
             console.log(currentUserRole);
 
             let columnsConfig = [
@@ -378,23 +379,35 @@
 
                 },
                 error: function (xhr) {
-                    let message = 'Terjadi kesalahan saat menyimpan data.';
-                    if (xhr.responseJSON?.errors) {
-                        const errors = Object.values(xhr.responseJSON.errors).flat().join('\n');
-                        message = errors;
-                    } else if (xhr.responseJSON?.message) {
-                        message = xhr.responseJSON.message;
-                    }
+                    const modalEl = document.getElementById('modalTambahData');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
 
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: message,
-                        showConfirmButton: true
+                    modal.hide();
+
+                    modalEl.addEventListener('hidden.bs.modal', function handler() {
+                        modalEl.removeEventListener('hidden.bs.modal', handler);
+
+                        let message = 'Terjadi kesalahan saat menyimpan data.';
+                        
+                        if (xhr.responseJSON?.errors) {
+                            const errors = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                            message = errors;
+                        } else if (xhr.responseJSON?.message) {
+                            message = xhr.responseJSON.message;
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: message,
+                            showConfirmButton: true
+                        });
                     });
                 }
             });
         });
+
+
 
         const urlEditTugasKompensasi = "{{ route('tugas-kompensasi.show', ':id') }}";
 

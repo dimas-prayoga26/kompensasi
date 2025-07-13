@@ -77,7 +77,7 @@
             </li>
         @endhasanyrole
 
-        @hasanyrole('Dosen')
+        @hasanyrole('Dosen|superAdmin')
             <li class="menu-item {{ request()->routeIs('matakuliah-diampu.index') || request()->routeIs('matakuliah-diampu.kompensasi.show') ? 'active' : '' }}">
                 <a href="{{ route('matakuliah-diampu.index') }}" class="menu-link">
                     <i class="menu-icon tf-icons bx bx-book-open"></i>
