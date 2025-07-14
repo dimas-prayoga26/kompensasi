@@ -365,20 +365,37 @@
                     }
                 },
                 {
-                    targets: 6,
+                targets: 6,
                     render: function (data, type, full, meta) {
+                        console.log(full);
+
+                        let isSemesterValid = false;
+
+                        if (full.semesters.semester === 'Ganjil') {
+                            if ([1, 3, 5, 7].includes(full.semester_lokal)) {
+                                isSemesterValid = true;
+                            }
+                        } else if (full.semesters.semester === 'Genap') {
+                            if ([2, 4, 6, 8].includes(full.semester_lokal)) {
+                                isSemesterValid = true;
+                            }
+                        }
+
+                        const disableClass = isSemesterValid ? '' : 'disabled';
+
                         return `
                             <div class="d-flex flex-column gap-1">
-                                <a href="/portal/matakuliah-diampu/kompensasi/${full.id}" class="btn btn-info btn-sm">
+                                <a href="/portal/matakuliah-diampu/kompensasi/${full.id}" class="btn btn-info btn-sm ${disableClass}">
                                     <i class="fe fe-eye"></i> Detail
                                 </a>
-                                <button type="button" class="btn btn-danger btn-sm" onclick="hapusData(${full.id})">
+                                <button type="button" class="btn btn-danger btn-sm ${disableClass}" onclick="hapusData(${full.id})">
                                     <i class="fe fe-trash"></i> Hapus
                                 </button>
                             </div>
                         `;
                     }
                 }
+
             ],
             columns: [
                 { data: null },
@@ -394,6 +411,7 @@
                 sSearch: ''
             }
         });
+
 
         $('#dosen-filter').on('change', function() {
             table.ajax.reload();

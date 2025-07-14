@@ -29,13 +29,12 @@ class AppServiceProvider extends ServiceProvider
             if (Auth::check()) {
                 $user = Auth::user();
                 $detail = $user->detailMahasiswa;
+                
+                $semesterAktif = Semester::where('aktif', true)->first();
 
                 if ($detail && $detail->prodi) {
                     $tahunMasuk = $detail->tahun_masuk;
                     $lamaStudi = $detail->prodi->lama_studi; // Bisa 6 atau 8
-
-                    // Ambil semester aktif
-                    $semesterAktif = Semester::where('aktif', true)->first();
 
                     if ($semesterAktif) {
                         $tahunSekarang = intval(substr($semesterAktif->tahun_ajaran, 0, 4));
@@ -51,15 +50,26 @@ class AppServiceProvider extends ServiceProvider
                         $totalKompensasi = Kompensasi::where('user_id', $user->id)
                             ->whereBetween('semester_lokal', [1, $semesterMax])
                             ->sum('menit_kompensasi');
+
+                        // Ambil tahun_ajaran dan semester
+                        $tahunAjaran = $semesterAktif->tahun_ajaran;
+                        $semester = $semesterAktif->semester;
                     }
+
                 }
+
+                $tahunAjaran = $semesterAktif->tahun_ajaran;
+                $semester = $semesterAktif->semester;
+
             }
 
             $view->with([
                 'totalKompensasi' => $totalKompensasi,
                 'semesterMax' => $semesterMax ?? null,
+                'tahunAjaran' => $tahunAjaran ?? null, // Mengirimkan tahun ajaran ke view
+                'semesterAktif' => $semester ?? null, // Mengirimkan semester aktif ke view dengan nama yang lebih konsisten
             ]);
-
         });
     }
+
 }

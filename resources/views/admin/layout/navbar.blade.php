@@ -22,6 +22,21 @@
             </div>
         @endrole
 
+        @hasanyrole('superAdmin|Dosen')
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Tahun Ajaran:</strong> {{ $tahunAjaran }}
+                </div>
+                <div style="margin-left: 20px;">
+                    <strong>Semester :</strong> {{ $semesterAktif }}
+                </div>
+            </div>
+
+
+        @endhasanyrole
+
+
+
 
         <ul class="navbar-nav flex-row align-items-center ms-auto">
 

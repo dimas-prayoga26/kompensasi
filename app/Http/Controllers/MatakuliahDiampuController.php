@@ -26,7 +26,9 @@ class MatakuliahDiampuController extends Controller
     {
         $dosen = User::role('Dosen')->with('detailDosen')->get();
 
-        return view('admin.matakuliah-diampu.index', compact('dosen'));
+        $semesterAktif = Semester::where('aktif', true)->first();
+
+        return view('admin.matakuliah-diampu.index', compact('dosen', 'semesterAktif'));
     }
 
 
@@ -446,7 +448,7 @@ class MatakuliahDiampuController extends Controller
 
                 $mahasiswaAktif = KelasSemesterMahasiswa::where('kelas_id', $kelasId)
                     ->where('semester_lokal', $semesterLokal)
-                    ->where('is_active', true)
+                    ->where('is_active', 1)
                     ->pluck('user_id');
 
                     
@@ -493,7 +495,11 @@ class MatakuliahDiampuController extends Controller
                 $mahasiswaBaru = User::role('Mahasiswa')
                     ->whereHas('detailMahasiswa', function ($query) use ($namaKelas) {
                         $query->where('kelas', $namaKelas);
-                    })->get();
+                    })
+                    ->whereHas('kelasSemesterMahasiswas', function ($query) {
+                        $query->where('is_active', true);
+                    })
+                    ->get();
 
                 foreach ($mahasiswaBaru as $mahasiswa) {
                     Kompensasi::create([
