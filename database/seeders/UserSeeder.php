@@ -67,71 +67,71 @@ class UserSeeder extends Seeder
             }
         }
 
-        // Data Prodi dan Mahasiswa
-        $prodis = [
-            ['kode' => '03', 'nama' => 'Informatika', 'lama_studi' => 6, 'prefix' => 'TI'],
-            ['kode' => '05', 'nama' => 'Rekayasa Perangkat Lunak', 'lama_studi' => 8, 'prefix' => 'RPL'],
-        ];
+        // // Data Prodi dan Mahasiswa
+        // $prodis = [
+        //     ['kode' => '03', 'nama' => 'Informatika', 'lama_studi' => 6, 'prefix' => 'TI'],
+        //     ['kode' => '05', 'nama' => 'Rekayasa Perangkat Lunak', 'lama_studi' => 8, 'prefix' => 'RPL'],
+        // ];
 
-        $tahunSekarang = (int) date('Y');
-        $kelasList = Kelas::all();
+        // $tahunSekarang = (int) date('Y');
+        // $kelasList = Kelas::all();
 
-        foreach ($prodis as $prodi) {
-            $prodiModel = Prodi::firstOrCreate(
-                ['kode_prodi' => $prodi['kode']],
-                ['nama' => $prodi['nama'], 'lama_studi' => $prodi['lama_studi']]
-            );
+        // foreach ($prodis as $prodi) {
+        //     $prodiModel = Prodi::firstOrCreate(
+        //         ['kode_prodi' => $prodi['kode']],
+        //         ['nama' => $prodi['nama'], 'lama_studi' => $prodi['lama_studi']]
+        //     );
 
-            $kelasProdi = $kelasList->filter(function ($kelas) use ($prodi) {
-                return Str::startsWith($kelas->nama, $prodi['prefix']);
-            })->values();
+        //     $kelasProdi = $kelasList->filter(function ($kelas) use ($prodi) {
+        //         return Str::startsWith($kelas->nama, $prodi['prefix']);
+        //     })->values();
 
-            if ($kelasProdi->isEmpty()) {
-                $this->command->warn("Tidak ada kelas ditemukan untuk prodi {$prodi['nama']} dengan prefix {$prodi['prefix']}");
-                continue;
-            }
+        //     if ($kelasProdi->isEmpty()) {
+        //         $this->command->warn("Tidak ada kelas ditemukan untuk prodi {$prodi['nama']} dengan prefix {$prodi['prefix']}");
+        //         continue;
+        //     }
 
-            foreach ($kelasProdi as $kIndex => $kelas) {
-                if (!preg_match('/^(TI|RPL)(\d)[A-Z]$/', $kelas->nama, $matches)) {
-                    $this->command->warn("Format kelas salah: {$kelas->nama}");
-                    continue;
-                }
+        //     foreach ($kelasProdi as $kIndex => $kelas) {
+        //         if (!preg_match('/^(TI|RPL)(\d)[A-Z]$/', $kelas->nama, $matches)) {
+        //             $this->command->warn("Format kelas salah: {$kelas->nama}");
+        //             continue;
+        //         }
 
-                $tingkat = (int) $matches[2];
-                $tahunMasukFull = $tahunSekarang - ($tingkat - 1);
-                $tahunMasukKode = substr($tahunMasukFull, -2);
+        //         $tingkat = (int) $matches[2];
+        //         $tahunMasukFull = $tahunSekarang - ($tingkat - 1);
+        //         $tahunMasukKode = substr($tahunMasukFull, -2);
 
-                for ($j = 1; $j <= 30; $j++) {
-                    $i = ($kIndex * 30) + $j;
+        //         for ($j = 1; $j <= 30; $j++) {
+        //             $i = ($kIndex * 30) + $j;
 
-                    $nim = $tahunMasukKode . $prodi['kode'] . str_pad($i, 3, '0', STR_PAD_LEFT);
-                    $email = "mhs_{$prodi['kode']}{$i}@mail.com";
+        //             $nim = $tahunMasukKode . $prodi['kode'] . str_pad($i, 3, '0', STR_PAD_LEFT);
+        //             $email = "mhs_{$prodi['kode']}{$i}@mail.com";
 
-                    $user = User::firstOrCreate(
-                        ['email' => $email],
-                        [
-                            'nim' => $nim,
-                            'nip' => null,
-                            'password' => Hash::make($nim),
-                        ]
-                    );
+        //             $user = User::firstOrCreate(
+        //                 ['email' => $email],
+        //                 [
+        //                     'nim' => $nim,
+        //                     'nip' => null,
+        //                     'password' => Hash::make($nim),
+        //                 ]
+        //             );
 
-                    $user->assignRole('Mahasiswa');
+        //             $user->assignRole('Mahasiswa');
 
-                    DetailMahasiswa::firstOrCreate(
-                        ['user_id' => $user->id],
-                        [
-                            'first_name' => "Mhs{$i}",
-                            'last_name' => $prodi['nama'],
-                            'tahun_masuk' => $tahunMasukFull,
-                            'jenis_kelamin' => rand(0, 1) ? 'Laki-laki' : 'Perempuan',
-                            'prodi_id' => $prodiModel->id,
-                            'kelas' => $kelas->nama,
-                        ]
-                    );
-                }
-            }
-        }
+        //             DetailMahasiswa::firstOrCreate(
+        //                 ['user_id' => $user->id],
+        //                 [
+        //                     'first_name' => "Mhs{$i}",
+        //                     'last_name' => $prodi['nama'],
+        //                     'tahun_masuk' => $tahunMasukFull,
+        //                     'jenis_kelamin' => rand(0, 1) ? 'Laki-laki' : 'Perempuan',
+        //                     'prodi_id' => $prodiModel->id,
+        //                     'kelas' => $kelas->nama,
+        //                 ]
+        //             );
+        //         }
+        //     }
+        // }
 
         // Seeder dosen
         for ($i = 1; $i <= 10; $i++) {

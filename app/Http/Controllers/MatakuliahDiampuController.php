@@ -540,13 +540,15 @@ class MatakuliahDiampuController extends Controller
 
             $sudahAda = Kompensasi::where('dosen_matakuliah_id', $id)
                 ->pluck('user_id');
-
+                
+            // dd($sudahAda);
             $belumAda = $mahasiswaAktif->diff($sudahAda);
+
 
             if ($belumAda->isEmpty()) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Belum terdapat data kompensasi.'
+                    'message' => 'Tidak ada mahasiswa inaktif.'
                 ]);
             }
 
