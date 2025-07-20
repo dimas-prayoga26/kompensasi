@@ -16,4 +16,9 @@ class TugasKompensasi extends Model
     {
         return $this->belongsTo(User::class, 'dosen_id');
     }
+
+    public function penawaranUsers()
+    {
+        return $this->hasMany(PenawaranKompensasiUser::class, 'penawaran_kompensasi_id');
+    }
 }

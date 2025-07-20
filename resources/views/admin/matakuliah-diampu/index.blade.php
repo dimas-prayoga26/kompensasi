@@ -240,6 +240,9 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/datatables.net/js/jquery.dataTables.min.js"></script>
+<script>
+    window.semesterAktif = @json($semesterAktif);
+</script>
 
 <script>
 
@@ -367,16 +370,17 @@
                 {
                 targets: 6,
                     render: function (data, type, full, meta) {
-                        console.log(full);
-
                         let isSemesterValid = false;
 
-                        if (full.semesters.semester === 'Ganjil') {
-                            if ([1, 3, 5, 7].includes(full.semester_lokal)) {
+                        const semesterSekarang = window.semesterAktif?.semester || ''; // 'Ganjil' / 'Genap'
+                        const semesterLokal = parseInt(full.semester_lokal);
+
+                        if (semesterSekarang === 'Ganjil') {
+                            if ([1, 3, 5, 7].includes(semesterLokal)) {
                                 isSemesterValid = true;
                             }
-                        } else if (full.semesters.semester === 'Genap') {
-                            if ([2, 4, 6, 8].includes(full.semester_lokal)) {
+                        } else if (semesterSekarang === 'Genap') {
+                            if ([2, 4, 6, 8].includes(semesterLokal)) {
                                 isSemesterValid = true;
                             }
                         }
@@ -394,6 +398,7 @@
                             </div>
                         `;
                     }
+
                 }
 
             ],
@@ -434,14 +439,14 @@
                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
             },
             success: function (response) {
-                if (response.status === true) {
-                    const modalEl = document.getElementById('modalTambahData');
-                    const modal = bootstrap.Modal.getInstance(modalEl);
-                    modal.hide();
+                const modalEl = document.getElementById('modalTambahData');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
 
-                    modalEl.addEventListener('hidden.bs.modal', function handler() {
-                        modalEl.removeEventListener('hidden.bs.modal', handler);
+                modalEl.addEventListener('hidden.bs.modal', function handler() {
+                    modalEl.removeEventListener('hidden.bs.modal', handler);
 
+                    if (response.status === true) {
                         Swal.fire({
                             icon: 'success',
                             title: 'Berhasil',
@@ -452,16 +457,18 @@
                         });
 
                         $("#tambahData")[0].reset();
-                        table.ajax.reload(null, false);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: response.message || 'Data tidak berhasil diproses.',
-                        showConfirmButton: true
-                    });
-                }
+                        // $("#tambahData")[0].reset();
+                        $('#datatable').DataTable().ajax.reload();
+                        // table.ajax.reload(null, false);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: response.message || 'Data tidak berhasil diproses.',
+                            showConfirmButton: true
+                        });
+                    }
+                });
             },
             error: function (xhr) {
                 let message = 'Terjadi kesalahan saat menyimpan data.';
@@ -472,15 +479,24 @@
                     message = xhr.responseJSON.message;
                 }
 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal',
-                    text: message,
-                    showConfirmButton: true
+                const modalEl = document.getElementById('modalTambahData');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+
+                modalEl.addEventListener('hidden.bs.modal', function handler() {
+                    modalEl.removeEventListener('hidden.bs.modal', handler);
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: message,
+                        showConfirmButton: true
+                    });
                 });
             }
         });
     });
+
 
     function editData(id) {
         const urlTahunAjaran = `/portal/matakuliah-diampu/${id}/tahun-ajaran`;
@@ -532,7 +548,30 @@
                                 }
                             },
                             error: function (xhr) {
-                                Swal.fire('Gagal', xhr.responseJSON?.message || 'Terjadi kesalahan.', 'error');
+                                const modalEl = document.getElementById('modalTambahData');
+                                const modal = bootstrap.Modal.getInstance(modalEl);
+
+                                modal.hide();
+
+                                modalEl.addEventListener('hidden.bs.modal', function handler() {
+                                    modalEl.removeEventListener('hidden.bs.modal', handler);
+
+                                    let message = 'Terjadi kesalahan saat menyimpan data.';
+                                    
+                                    if (xhr.responseJSON?.errors) {
+                                        const errors = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                                        message = errors;
+                                    } else if (xhr.responseJSON?.message) {
+                                        message = xhr.responseJSON.message;
+                                    }
+
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Gagal',
+                                        text: message,
+                                        showConfirmButton: true
+                                    });
+                                });
                             }
                         });
                     }

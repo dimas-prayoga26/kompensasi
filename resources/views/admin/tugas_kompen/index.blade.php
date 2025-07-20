@@ -193,6 +193,75 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modalDetailData" tabindex="-1" aria-labelledby="modalDetailDataLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl"> <!-- Besar karena isinya tabel -->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail Mahasiswa Kompensasi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered" id="detailDatatable" width="100%">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>NIM</th>
+                                <th>Nama Mahasiswa</th>
+                                <th>Kelas</th>
+                                <th>Aksi</th> 
+                            </tr>
+                        </thead>
+                        <tbody></tbody> <!-- Akan diisi oleh DataTables -->
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Upload Bukti -->
+    <div class="modal fade" id="modalUploadBukti" tabindex="-1" aria-labelledby="modalUploadBuktiLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="formUploadBukti" enctype="multipart/form-data">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalUploadBuktiLabel">Upload Bukti Tugas Kompensasi</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="id" id="upload_id_kompensasi">
+
+                        <div class="mb-3">
+                            <label for="file_bukti" class="form-label">Pilih File Bukti</label>
+                            <input type="file" class="form-control" id="file_bukti" name="file_bukti" 
+                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="keterangan" class="form-label">Keterangan (Opsional)</label>
+                            <textarea name="keterangan" id="keterangan" class="form-control" rows="3"
+                                    placeholder="Tulis keterangan singkat tentang file yang diunggah..."></textarea>
+                        </div>
+
+                        <!-- Preview Gambar -->
+                        <img id="preview_upload_image" src="#" class="img-fluid my-2 d-none" style="max-height: 150px;">
+
+                        <!-- Preview Dokumen (PDF, Word, Excel) -->
+                        <div id="preview_upload_file" class="d-none my-2">
+                            <!-- Preview file akan dimunculkan via JS -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Upload</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
 </div>
 
 @endsection
@@ -200,6 +269,9 @@
 @section('js')
 
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script>
+    const currentUserID = {{ auth()->user()->id }};
+</script>
 
 
 
@@ -297,8 +369,33 @@
                     {
                         targets: 5,
                         render: function (data, type, full, meta) {
-                            if (currentUserRole !== 'Mahasiswa') {
+                            const currentUserId = parseInt(currentUserID); // dari Blade
+                            const userSudahTerdaftar = full.penawaran_users?.some(pu => parseInt(pu.user_id) === currentUserId);
+
+                            if (currentUserRole === 'Mahasiswa') {
+                                let html = `
+                                    <button type="button" class="btn btn-success btn-sm" onclick="pilihData(${full.id})">
+                                        <i class="fe fe-check"></i> Pilih
+                                    </button>
+                                `;
+
+                                if (userSudahTerdaftar) {
+                                    html += `
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="downloadBukti(${full.id})">
+                                            <i class="fe fe-download"></i> Download Bukti
+                                        </button>
+                                    `;
+                                }
+
+                                return html;
+                            } else {
                                 return `
+                                    <button type="button" class="btn btn-info btn-sm" onclick="detailData(${full.id})">
+                                        <i class="fe fe-eye"></i> Detail
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="uploadBukti(${full.id})">
+                                        <i class="fe fe-upload"></i> Upload Bukti
+                                    </button>
                                     <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
                                         <i class="fe fe-edit"></i> Edit
                                     </button>
@@ -307,9 +404,9 @@
                                     </button>
                                 `;
                             }
-                            return '';
                         }
                     }
+
                 ],
                 columns: columnsConfig,
                 language: {
@@ -317,10 +414,103 @@
                     sSearch: ''
                 }
             });
+        });
 
-            if (currentUserRole === 'Mahasiswa') {
-                table.column(5).visible(false);
+        function uploadBukti(id) {
+            $('#upload_id_kompensasi').val(id);
+            $('#file_bukti').val('');
+            $('#preview_upload_image').addClass('d-none');
+            $('#preview_upload_file').addClass('d-none').html('');
+            $('#modalUploadBukti').modal('show');
+        }
+
+        $('#file_bukti').on('change', function() {
+            const file = this.files[0];
+            const imgPreview = $('#preview_upload_image');
+            const filePreview = $('#preview_upload_file');
+
+            if (!file) return;
+
+            const fileType = file.type;
+            const reader = new FileReader();
+
+            if (fileType.startsWith('image/')) {
+                reader.onload = function(e) {
+                    imgPreview.attr('src', e.target.result).removeClass('d-none');
+                    filePreview.addClass('d-none').html('');
+                };
+                reader.readAsDataURL(file);
+            } else {
+                imgPreview.addClass('d-none');
+                filePreview.removeClass('d-none').html(`<p class="text-muted">${file.name}</p>`);
             }
+        });
+
+        $('#formUploadBukti').on('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const modalEl = document.getElementById('modalUploadBukti');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+
+            // Tutup modal terlebih dahulu
+            modalInstance.hide();
+
+            // Tampilkan SweetAlert loader SETELAH modal tertutup
+            modalEl.addEventListener('hidden.bs.modal', function showLoader() {
+                modalEl.removeEventListener('hidden.bs.modal', showLoader);
+
+                Swal.fire({
+                    title: 'Mengunggah...',
+                    text: 'Mohon tunggu sebentar.',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
+                // Jalankan AJAX di sini setelah modal benar-benar tertutup
+                $.ajax({
+                    url: "{{ route('tugas-kompensasi.upload.bukti') }}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        $('#formUploadBukti')[0].reset();
+                        $('#preview_upload_image').addClass('d-none').attr('src', '#');
+                        $('#preview_upload_file').addClass('d-none').html('');
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: res.message || 'Bukti berhasil diunggah.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+
+                        // $('#datatable').DataTable().ajax.reload(); // kalau pakai datatable
+                    },
+                    error: function(xhr) {
+                        let message = 'Terjadi kesalahan saat menyimpan data.';
+                        
+                        if (xhr.responseJSON?.errors) {
+                            const errors = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                            message = errors;
+                        } else if (xhr.responseJSON?.message) {
+                            message = xhr.responseJSON.message;
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: message,
+                            showConfirmButton: true
+                        });
+                    }
+                });
+            });
         });
 
 
@@ -329,6 +519,150 @@
         function showImagePreview(url) {
             $("#previewImage").attr("src", url);
             $("#modalImagePreview").modal("show");
+        }
+
+        function detailData(id) {
+            $('#modalDetailData').modal('show');
+
+            // Jika datatable sudah pernah dibuat, hancurkan dulu agar tidak duplikat
+            if ($.fn.DataTable.isDataTable('#detailDatatable')) {
+                $('#detailDatatable').DataTable().destroy();
+            }
+
+            // Buat datatable detail
+            $('#detailDatatable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: `/portal/tugas-kompensasi/${id}/detail`,
+                    type: 'GET'
+                },
+                columns: [
+                    { data: null, name: 'no', render: (data, type, row, meta) => meta.row + 1 },
+                    { data: 'nim', name: 'nim' },
+                    { data: 'nama_mahasiswa', name: 'nama_mahasiswa' },
+                    { data: 'kelas', name: 'kelas' },
+                    {
+                        data: 'id',
+                        name: 'id',
+                        render: function (data, type, row) {
+                            return `
+                                <button class="btn btn-danger btn-sm" onclick="hapusMahasiswa(${data})">
+                                    <i class="fe fe-trash"></i> Hapus
+                                </button>
+                            `;
+                        }
+                    }
+                ]
+            });
+        }
+
+        function hapusMahasiswa(id) {
+            $('#modalDetailData').modal('hide');
+
+            setTimeout(() => {
+                Swal.fire({
+                    title: 'Yakin ingin menghapus?',
+                    text: 'Data mahasiswa akan dihapus dari program kompensasi ini.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `/portal/tugas-kompensasi/detail/${id}`,
+                            type: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function (response) {
+                                if (response.status) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil',
+                                        text: response.message,
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+
+                                    $('#detailDatatable').DataTable().ajax.reload(null, false);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Gagal',
+                                        text: response.message
+                                    });
+
+                                    $('#modalDetailData').modal('show');
+                                }
+                            },
+                            error: function (xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal',
+                                    text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghapus data.'
+                                });
+
+                                $('#modalDetailData').modal('show');
+                            }
+                        });
+                    } else {
+                        $('#modalDetailData').modal('show');
+                    }
+                });
+            }, 300);
+        }
+
+        function pilihData(kompensasiId) {
+            Swal.fire({
+                title: 'Yakin ingin mendaftar?',
+                text: 'Anda akan bergabung dalam tugas kompensasi ini.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Pilih',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/portal/tugas-kompensasi/pilih',
+                        type: 'POST',
+                        data: {
+                            kompensasi_id: kompensasiId
+                        },
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function (response) {
+                            if (response.status) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil',
+                                    text: response.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+
+                                $('#datatable').DataTable().ajax.reload();
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal',
+                                    text: response.message
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal',
+                                text: xhr.responseJSON?.message || 'Terjadi kesalahan saat memilih data.'
+                            });
+                        }
+                    });
+                }
+            });
         }
 
 

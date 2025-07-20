@@ -220,12 +220,31 @@
                     { data: 'semester' },
                     { data: 'keterangan' },
                 ],
-                columnDefs: [{
+                columnDefs: [
+                    {
                     targets: 0,
-                    render: function (data, type, full, meta) {
-                        return meta.row + 1;
-                    }
-                }],
+                        render: function (data, type, full, meta) {
+                            return meta.row + 1;
+                        }
+                        
+                    },
+                    {
+                        targets: 4,
+                        render: function(data, type, full, meta) {
+                            if (!data) return 'No description';
+
+                            let htmlDecoded = data
+                                .replace(/&lt;/g, '<')
+                                .replace(/&gt;/g, '>')
+                                .replace(/&amp;/g, '&')
+                                .replace(/&quot;/g, '"')
+                                .replace(/&#039;/g, "'");
+
+                            let textOnly = htmlDecoded.replace(/<\/?[^>]+(>|$)/g, "");
+                            return textOnly ? textOnly : 'No description';
+                        }
+                    },
+                ],
                 language: {
                     searchPlaceholder: 'Search...',
                     sSearch: ''

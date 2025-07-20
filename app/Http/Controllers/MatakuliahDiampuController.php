@@ -26,7 +26,7 @@ class MatakuliahDiampuController extends Controller
     {
         $dosen = User::role('Dosen')->with('detailDosen')->get();
 
-        $semesterAktif = Semester::where('aktif', true)->first();
+        $semesterAktif = Semester::where('aktif', 1)->first();
 
         return view('admin.matakuliah-diampu.index', compact('dosen', 'semesterAktif'));
     }
@@ -183,60 +183,53 @@ class MatakuliahDiampuController extends Controller
 
 
     public function datatable(Request $request)
-{
-    // Jika pengguna adalah Dosen
-    if (auth()->user()->hasRole('Dosen')) {
-        $data = DosenMatakuliah::with([
-            'dosen.detailDosen', 
-            'matakuliah.matakuliahSemesters', 
-            'kelas', 
-            'semesters'
-        ])
-        ->whereHas('dosen', function($query) {
-            $query->where('user_id', auth()->user()->id); // Filter berdasarkan user_id dosen yang sedang login
-        })
-        ->get();
-    } elseif (auth()->user()->hasRole('superAdmin')) {
-        // SuperAdmin bisa melihat semua data, dengan filter jika ada
-        $data = DosenMatakuliah::with([
-            'dosen.detailDosen', 
-            'matakuliah.matakuliahSemesters', 
-            'kelas', 
-            'semesters'
-        ]);
+    {
+        if (auth()->user()->hasRole('Dosen')) {
+            $data = DosenMatakuliah::with([
+                'dosen.detailDosen', 
+                'matakuliah.matakuliahSemesters', 
+                'kelas', 
+                'semesters'
+            ])
+            ->whereHas('dosen', function($query) {
+                $query->where('dosen_id', auth()->user()->id);
+            })
+            ->get();
+        } elseif (auth()->user()->hasRole('superAdmin')) {
+            $data = DosenMatakuliah::with([
+                'dosen.detailDosen', 
+                'matakuliah.matakuliahSemesters', 
+                'kelas', 
+                'semesters'
+            ]);
 
-        // Jika ada filter dosen_id dari frontend, terapkan filter tersebut
-        if ($request->has('dosen_id') && $request->dosen_id != '') {
-            $data->whereHas('dosen', function($query) use ($request) {
-                $query->where('dosen_id', $request->dosen_id); // Filter berdasarkan dosen_id
-            });
+            if ($request->has('dosen_id') && $request->dosen_id != '') {
+                $data->whereHas('dosen', function($query) use ($request) {
+                    $query->where('dosen_id', $request->dosen_id);
+                });
+            }
+
+            $data = $data->get();
+        } else {
+            return response()->json(['error' => 'Anda tidak memiliki akses'], 403);
         }
 
-        $data = $data->get(); // Ambil data setelah filter
-    } else {
-        return response()->json(['error' => 'Anda tidak memiliki akses'], 403);
+        return datatables()->of($data)
+            ->addColumn('dosen_name', function ($row) {
+                $detail = $row->dosen->detailDosen;
+                return $detail ? $detail->first_name . ' ' . $detail->last_name : 'Nama Dosen Tidak Ditemukan';
+            })
+            ->addColumn('matakuliah_name', function ($row) {
+                return $row->matakuliah ? $row->matakuliah->nama : 'Matakuliah Tidak Ditemukan';
+            })
+            ->addColumn('kelas_name', function ($row) {
+                return $row->kelas ? $row->kelas->nama : 'Kelas Tidak Ditemukan';
+            })
+            ->addColumn('semester_lokal', function ($row) {
+                return optional($row->matakuliah->matakuliahSemesters)->semester_lokal ?? 'Semester Lokal Tidak Ditemukan';
+            })
+            ->make(true);
     }
-
-    return datatables()->of($data)
-        ->addColumn('dosen_name', function ($row) {
-            $detail = $row->dosen->detailDosen;
-            return $detail ? $detail->first_name . ' ' . $detail->last_name : 'Nama Dosen Tidak Ditemukan';
-        })
-        ->addColumn('matakuliah_name', function ($row) {
-            return $row->matakuliah ? $row->matakuliah->nama : 'Matakuliah Tidak Ditemukan';
-        })
-        ->addColumn('kelas_name', function ($row) {
-            return $row->kelas ? $row->kelas->nama : 'Kelas Tidak Ditemukan';
-        })
-        ->addColumn('semester_lokal', function ($row) {
-            return optional($row->matakuliah->matakuliahSemesters)->semester_lokal ?? 'Semester Lokal Tidak Ditemukan';
-        })
-        ->make(true);
-}
-
-
-
-
 
 
     public function select2Kelas(Request $request)
@@ -326,7 +319,7 @@ class MatakuliahDiampuController extends Controller
             ->addColumn('menit_kompensasi', function ($row) {
                 return $row->menit_kompensasi . ' menit';
             })
-            ->rawColumns(['aksi']) // hanya perlu ini kalau ada kolom HTML/aksi
+            ->rawColumns(['aksi'])
             ->make(true);
     }
 
@@ -547,7 +540,6 @@ class MatakuliahDiampuController extends Controller
             $sudahAda = Kompensasi::where('dosen_matakuliah_id', $id)
                 ->pluck('user_id');
                 
-            // dd($sudahAda);
             $belumAda = $mahasiswaAktif->diff($sudahAda);
 
 
@@ -586,13 +578,8 @@ class MatakuliahDiampuController extends Controller
     {
         $dosenMatakuliah = DosenMatakuliah::with(['matakuliah', 'kelas', 'kompensasis'])
                                         ->findOrFail($id);
-        // dd($dosenMatakuliah);
-        
         return Excel::download(new KompensasiExport($dosenMatakuliah), 'Daftar_Mahasiswa_Kompen_' . $dosenMatakuliah->matakuliah->nama . '.xlsx');
 
     }
-
-
-
 
 }

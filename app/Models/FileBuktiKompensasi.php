@@ -6,5 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class FileBuktiKompensasi extends Model
 {
-    //
+     protected $keyType = 'string';
+
+    protected $guarded = [''];
+
+    protected $table = 'file_bukti_penawaran_kompensasi';
+
+    public function tugasKompensasi()
+    {
+        return $this->belongsTo(TugasKompensasi::class, 'penawaran_kompensasi_id');
+    }
 }

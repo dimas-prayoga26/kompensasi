@@ -34,40 +34,46 @@ class AppServiceProvider extends ServiceProvider
 
                 if ($detail && $detail->prodi) {
                     $tahunMasuk = $detail->tahun_masuk;
-                    $lamaStudi = $detail->prodi->lama_studi; // Bisa 6 atau 8
+                    $lamaStudi = $detail->prodi->lama_studi;
 
                     if ($semesterAktif) {
                         $tahunSekarang = intval(substr($semesterAktif->tahun_ajaran, 0, 4));
-                        $tipeSemester = strtolower($semesterAktif->semester); // ganjil/genap
+                        $tipeSemester = strtolower($semesterAktif->semester);
 
                         $selisihTahun = $tahunSekarang - $tahunMasuk;
                         $semesterBerjalan = $selisihTahun * 2 + ($tipeSemester == 'genap' ? 2 : 1);
 
-                        // Batas maksimal sesuai lama studi
                         $semesterMax = min($semesterBerjalan, $lamaStudi);
 
-                        // Totalkan semua kompensasi dari semester 1 s.d semesterMax
                         $totalKompensasi = Kompensasi::where('user_id', $user->id)
                             ->whereBetween('semester_lokal', [1, $semesterMax])
                             ->sum('menit_kompensasi');
 
-                        // Ambil tahun_ajaran dan semester
                         $tahunAjaran = $semesterAktif->tahun_ajaran;
                         $semester = $semesterAktif->semester;
                     }
 
                 }
 
-                $tahunAjaran = $semesterAktif->tahun_ajaran;
-                $semester = $semesterAktif->semester;
+                $tahunAjaran = null;
+                $semester = null;
+
+                if ($semesterAktif) {
+                    $tahunAjaran = $semesterAktif->tahun_ajaran;
+                    $semester = $semesterAktif->semester;
+                } else {
+                    $tahunAjaran = "Tahun ajaran tidak tersedia"; 
+                    $semester = "Semester tidak tersedia";
+                }
+
 
             }
 
             $view->with([
                 'totalKompensasi' => $totalKompensasi,
                 'semesterMax' => $semesterMax ?? null,
-                'tahunAjaran' => $tahunAjaran ?? null, // Mengirimkan tahun ajaran ke view
-                'semesterAktif' => $semester ?? null, // Mengirimkan semester aktif ke view dengan nama yang lebih konsisten
+                'tahunAjaran' => $tahunAjaran ?? null,
+                'semesterAktif' => $semester ?? null,
             ]);
         });
     }

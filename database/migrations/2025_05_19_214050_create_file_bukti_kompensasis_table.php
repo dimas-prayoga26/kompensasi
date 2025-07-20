@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('file_bukti_kompensasis', function (Blueprint $table) {
+        Schema::create('file_bukti_penawaran_kompensasis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kompensasi_id')->constrained('kompensasis')->onDelete('cascade');
+            $table->foreignId('penawaran_kompensasi_id')->constrained('penawaran_kompensasis')->onDelete('cascade');
             $table->string('file_path');
             $table->text('keterangan')->nullable(); // deskripsi singkat
             $table->timestamps();

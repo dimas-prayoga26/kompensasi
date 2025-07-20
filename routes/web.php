@@ -85,6 +85,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/tugas-kompensasi/{id}/detail', [TugasKompensasiController::class, 'detail']);
         Route::delete('/tugas-kompensasi/detail/{id}', [TugasKompensasiController::class, 'hapusMahasiswa'])->name('tugas-kompensasi.detail.destroy');
         Route::post('/tugas-kompensasi/pilih', [TugasKompensasiController::class, 'storeMahasiswaKompensasi'])->middleware('auth');
+        Route::post('/tugas-kompensasi/upload-bukti', [TugasKompensasiController::class, 'uploadBukti'])->name('tugas-kompensasi.upload.bukti');
         Route::resource('tugas-kompensasi', TugasKompensasiController::class);
     });
 });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FileBuktiKompensasi;
 use App\Models\User;
 use Illuminate\Http\Request;
 use App\Models\TugasKompensasi;
@@ -23,16 +24,12 @@ class TugasKompensasiController extends Controller
 
         return view('admin.tugas_kompen.index', compact('dosens'));
     }
-
-
-
     
     public function create()
     {
 
     }
 
-    
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -265,12 +262,16 @@ class TugasKompensasiController extends Controller
         $userId = auth()->user()->id;
         $role = auth()->user()->getRoleNames()->first();
 
-        if ($role === 'superAdmin') {
-            $data = TugasKompensasi::with('dosen.detailDosen')->get();
+        if ($role === 'superAdmin' || $role === 'Mahasiswa') {
+            $data = TugasKompensasi::with([
+                'dosen.detailDosen',
+                'penawaranUsers.user'
+            ])->get();
         } else {
-            $data = TugasKompensasi::with('dosen.detailDosen')
-                ->where('dosen_id', $userId)
-                ->get();
+            $data = TugasKompensasi::with([
+                'dosen.detailDosen',
+                'penawaranUsers.user'
+            ])->where('dosen_id', $userId)->get();
         }
 
         return DataTables::of($data)
@@ -281,7 +282,125 @@ class TugasKompensasiController extends Controller
             ->make(true);
     }
 
+    public function detail($id)
+    {
+        $data = MahasiswaKompensasi::where('penawaran_kompensasi_id', $id)
+            ->with(['mahasiswa.detailMahasiswa'])
+            ->get()
+            ->map(function ($item) {
+                $detail = $item->mahasiswa->detailMahasiswa;
 
+                return [
+                    'id' => $item->id,
+                    'nim' => $item->mahasiswa->nim,
+                    'nama_mahasiswa' => $detail ? "{$detail->first_name} {$detail->last_name}" : '-',
+                    'kelas' => $detail->kelas ?? '-',
+                ];
+            });
 
+        return DataTables::of($data)->make(true);
+    }
+
+    public function hapusMahasiswa($id)
+    {
+        try {
+            $mahasiswa = MahasiswaKompensasi::findOrFail($id);
+            $mahasiswa->delete();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Mahasiswa berhasil dihapus dari kompensasi.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal menghapus mahasiswa: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function storeMahasiswaKompensasi(Request $request)
+    {
+        $request->validate([
+            'kompensasi_id' => 'required|exists:penawaran_kompensasis,id'
+        ]);
+
+        try {
+            $userId = Auth::id();
+
+            $exists = MahasiswaKompensasi::where('penawaran_kompensasi_id', $request->kompensasi_id)
+                        ->where('user_id', $userId)
+                        ->exists();
+
+            if ($exists) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Anda sudah mendaftar dalam kompensasi ini.'
+                ], 400);
+            }
+
+            MahasiswaKompensasi::create([
+                'penawaran_kompensasi_id' => $request->kompensasi_id,
+                'user_id' => $userId
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Berhasil mendaftar ke kompensasi.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Gagal menyimpan data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function uploadBukti(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:penawaran_kompensasis,id',
+            'file_bukti' => 'required|file|max:5120|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx',
+            'keterangan' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $file = $request->file('file_bukti');
+            $extension = strtolower($file->getClientOriginalExtension());
+
+            // Folder dinamis berdasarkan ekstensi
+            $folder = 'bukti_penawaran_kompensasi_' . $extension;
+
+            // Nama file unik
+            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $newFileName = $originalName . '_' . time() . '.' . $extension;
+
+            // Simpan file ke storage/app/public/...
+            $filePath = $file->storeAs($folder, $newFileName, 'public');
+
+            // Simpan ke database
+            FileBuktiKompensasi::create([
+                'penawaran_kompensasi_id' => $request->id,
+                'file_path' => $filePath,
+                'keterangan' => $request->keterangan,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Bukti penyelesaian tugas kompensasi berhasil diupload.'
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Terjadi kesalahan saat upload: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 }
