@@ -35,6 +35,7 @@ class TugasKompensasiController extends Controller
         $validator = Validator::make($request->all(), [
             'id_dosen' => 'required|exists:users,id',
             'jumlah_mahasiswa' => 'required|integer|min:1',
+            'jumlah_menit_kompensasi' => 'required|integer|min:1', // ✅ Tambahan validasi
             'deskripsi_kompensasi' => 'required|string|max:255',
             'file_image' => 'required|mimes:jpeg,png,jpg,webp,xlsx,xls,pdf,doc,docx|max:2048',
         ]);
@@ -49,11 +50,9 @@ class TugasKompensasiController extends Controller
 
         DB::beginTransaction();
         try {
-            // Ambil file
             $file = $request->file('file_image');
             $fileExtension = $file->getClientOriginalExtension();
 
-            // Ambil nama dosen dari 'dosen_id'
             $dosen = User::find($request->id_dosen)->detailDosen;
 
             if (!$dosen) {
@@ -67,7 +66,7 @@ class TugasKompensasiController extends Controller
 
             if (in_array($fileExtension, ['jpeg', 'png', 'jpg', 'webp'])) {
                 $folder = 'image_kompensasi';
-            } elseif (in_array($fileExtension, ['pdf'])) {
+            } elseif ($fileExtension === 'pdf') {
                 $folder = 'pdf_dokumen_kompensasi';
             } elseif (in_array($fileExtension, ['doc', 'docx'])) {
                 $folder = 'word_dokumen_kompensasi';
@@ -88,6 +87,7 @@ class TugasKompensasiController extends Controller
             TugasKompensasi::create([
                 'dosen_id' => $request->id_dosen,
                 'jumlah_mahasiswa' => $request->jumlah_mahasiswa,
+                'jumlah_menit_kompensasi' => $request->jumlah_menit_kompensasi, // ✅ disimpan ke DB
                 'deskripsi_kompensasi' => $request->deskripsi_kompensasi,
                 'file_path' => $filePath,
             ]);
@@ -108,10 +108,6 @@ class TugasKompensasiController extends Controller
             ], 500);
         }
     }
-
-
-
-
     
     public function show($id)
     {
@@ -148,19 +144,21 @@ class TugasKompensasiController extends Controller
             $validated = $request->validate([
                 'id_dosen' => 'required|exists:users,id',
                 'jumlah_mahasiswa' => 'required|integer|min:1',
+                'jumlah_menit_kompensasi' => 'required|integer|min:1', // ✅ Tambahan validasi
                 'deskripsi_kompensasi' => 'required|string',
-                'file_image' => 'nullable|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xlsx,xls|max:2048'
+                'file_image' => 'nullable|mimes:jpeg,png,jpg,webp,pdf,doc,docx,xlsx,xls|max:2048',
             ]);
 
             $oldFilePath = $kompensasi->file_path;
 
+            // Cek jika ada file baru
             if ($request->hasFile('file_image')) {
                 if ($oldFilePath && Storage::disk('public')->exists($oldFilePath)) {
                     Storage::disk('public')->delete($oldFilePath);
                 }
 
                 $file = $request->file('file_image');
-                $fileExtension = $file->getClientOriginalExtension();
+                $fileExtension = strtolower($file->getClientOriginalExtension());
 
                 $dosen = User::find($request->id_dosen)->detailDosen;
 
@@ -175,7 +173,7 @@ class TugasKompensasiController extends Controller
 
                 if (in_array($fileExtension, ['jpeg', 'png', 'jpg', 'webp'])) {
                     $folder = 'image_kompensasi';
-                } elseif (in_array($fileExtension, ['pdf'])) {
+                } elseif ($fileExtension === 'pdf') {
                     $folder = 'pdf_dokumen_kompensasi';
                 } elseif (in_array($fileExtension, ['doc', 'docx'])) {
                     $folder = 'word_dokumen_kompensasi';
@@ -195,8 +193,10 @@ class TugasKompensasiController extends Controller
                 $kompensasi->file_path = $filePath;
             }
 
+            // Simpan data ke DB
             $kompensasi->dosen_id = $validated['id_dosen'];
             $kompensasi->jumlah_mahasiswa = $validated['jumlah_mahasiswa'];
+            $kompensasi->jumlah_menit_kompensasi = $validated['jumlah_menit_kompensasi']; // ✅ Tambahan simpan
             $kompensasi->deskripsi_kompensasi = $validated['deskripsi_kompensasi'];
             $kompensasi->save();
 
@@ -214,6 +214,7 @@ class TugasKompensasiController extends Controller
             ], 500);
         }
     }
+
     
     public function destroy(string $id)
     {

@@ -206,10 +206,11 @@
         // === Jika Mahasiswa ===
         if (userRole === 'Mahasiswa') {
             table = $("#datatable").DataTable({
-                responsive: true,
+                responsive: false,
                 processing: true,
                 serverSide: true,
                 autoWidth: false,
+                scrollX: true,
                 ajax: {
                     url: "{{ route('mahasiswa.dashboard.datatable') }}",
                 },
@@ -259,10 +260,11 @@
         // === Jika Super Admin ===
         if (userRole === 'superAdmin') {
             table = $("#datatable").DataTable({
-                responsive: true,
+                responsive: false,
                 processing: true,
                 serverSide: true,
                 autoWidth: false,
+                scrollX: true,
                 ajax: {
                     url: "{{ route('admin.dashboard.datatable') }}",
                     data: function (d) {

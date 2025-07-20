@@ -148,10 +148,11 @@
 
         $(document).ready(function () {
             table = $("#datatable").DataTable({
-                responsive: true,
+                responsive: false,
                 processing: true,
                 serverSide: true,
                 autoWidth: false,
+                scrollX: true,
                 ajax: {
                     url: "{{ route('kelas.datatable') }}",
                 },

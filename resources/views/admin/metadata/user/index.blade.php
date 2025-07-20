@@ -344,9 +344,10 @@
             const isDosen = role === 'Dosen';
 
             table = $('#datatable').DataTable({
-                responsive: true,
+                responsive: false,
                 processing: true,
                 serverSide: true,
+                autoWidth: false,
                 scrollX: true,
                 ajax: {
                     url: "{{ route('user.datatable') }}?role=" + role,

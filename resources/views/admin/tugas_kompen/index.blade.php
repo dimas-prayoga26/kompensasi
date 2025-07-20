@@ -59,6 +59,7 @@
                                       <th>Nama Dosen</th>
                                       <th>Tugas Kompen</th>
                                       <th>Jumlah mahasiswa dibutuhkan</th>
+                                      <th>Jumlah menit kompensasi</th>
                                       <th>Deskripsi Kompen</th>
                                       <th>Aksi</th>
                                   </tr>
@@ -83,6 +84,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <div class="modal-body">
+
                         @if(Auth::user()->hasRole('Dosen'))
                             <input type="hidden" name="id_dosen" value="{{ Auth::user()->id }}">
                         @else
@@ -101,11 +103,14 @@
                             </div>
                         @endif
 
-
-
                         <div class="mb-3">
                             <label for="tambah_jumlah_mahasiswa" class="form-label">Jumlah Mahasiswa</label>
                             <input type="number" class="form-control" id="tambah_jumlah_mahasiswa" name="jumlah_mahasiswa" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="tambah_jumlah_menit" class="form-label">Jumlah Menit Kompensasi</label>
+                            <input type="number" class="form-control" id="tambah_jumlah_menit" name="jumlah_menit_kompensasi" required>
                         </div>
 
                         <div class="mb-3">
@@ -129,7 +134,6 @@
         </div>
     </div>
 
-
     <div class="modal fade" id="modalEditData" tabindex="-1" aria-labelledby="modalEditDataLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -151,7 +155,7 @@
                                     @foreach ($dosens as $dosen)
                                         @if ($dosen->detailDosen)
                                             <option value="{{ $dosen->id }}">
-                                                 {{ $dosen->detailDosen->first_name }} {{ $dosen->detailDosen->last_name }} - {{ $dosen->nip }}
+                                                {{ $dosen->detailDosen->first_name }} {{ $dosen->detailDosen->last_name }} - {{ $dosen->nip }}
                                             </option>
                                         @endif
                                     @endforeach
@@ -162,6 +166,11 @@
                         <div class="mb-3">
                             <label for="edit_jumlah_mahasiswa" class="form-label">Jumlah Mahasiswa</label>
                             <input type="number" class="form-control" id="edit_jumlah_mahasiswa" name="jumlah_mahasiswa" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="edit_jumlah_menit" class="form-label">Jumlah Menit Kompensasi</label>
+                            <input type="number" class="form-control" id="edit_jumlah_menit" name="jumlah_menit_kompensasi" required>
                         </div>
 
                         <div class="mb-3">
@@ -183,8 +192,8 @@
                         <div id="preview_edit_file" class="d-none my-2">
                             <!-- Konten akan dimuat secara dinamis berdasarkan jenis file -->
                         </div>
-
                     </div>
+
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-primary" id="updateData">Simpan Perubahan</button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -193,6 +202,7 @@
             </div>
         </div>
     </div>
+
 
     <div class="modal fade" id="modalDetailData" tabindex="-1" aria-labelledby="modalDetailDataLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl"> <!-- Besar karena isinya tabel -->
@@ -302,6 +312,7 @@
                 { data: 'nama_dosen' },
                 { data: 'file_image' },
                 { data: 'jumlah_mahasiswa' },
+                { data: 'jumlah_menit_kompensasi' },
                 { data: 'deskripsi_kompensasi' },
             ];
 
@@ -310,10 +321,12 @@
             }
 
             table = $("#datatable").DataTable({
-                responsive: true,
+                responsive: false,
                 processing: true,
                 serverSide: true,
                 autoWidth: false,
+                scrollX: true,
+
                 ajax: {
                     url: "{{ route('tugas-kompensasi.datatable') }}",
                 },
@@ -361,13 +374,13 @@
                         }
                     },
                     {
-                        targets: 4,
+                        targets: 5,
                         render: function (data, type, full, meta) {
                             return full.deskripsi_kompensasi || '-';
                         }
                     },
                     {
-                        targets: 5,
+                        targets: 6,
                         render: function (data, type, full, meta) {
                             const currentUserId = parseInt(currentUserID); // dari Blade
                             const userSudahTerdaftar = full.penawaran_users?.some(pu => parseInt(pu.user_id) === currentUserId);
@@ -758,6 +771,7 @@
                         $('#edit_id_kompensasi').val(tugasKompensasi.id);
                         $('#edit_id_dosen').val(tugasKompensasi.dosen_id).trigger('change');
                         $('#edit_jumlah_mahasiswa').val(tugasKompensasi.jumlah_mahasiswa);
+                        $('#edit_jumlah_menit').val(tugasKompensasi.jumlah_menit_kompensasi);
                         $('#edit_deskripsi').val(tugasKompensasi.deskripsi_kompensasi);
 
                         // Cek apakah ada file yang diupload
