@@ -373,7 +373,7 @@
                     render: function (data, type, full, meta) {
                         let isSemesterValid = false;
 
-                        const semesterSekarang = window.semesterAktif?.semester || ''; // 'Ganjil' / 'Genap'
+                        const semesterSekarang = window.semesterAktif?.semester || '';
                         const semesterLokal = parseInt(full.semester_lokal);
 
                         if (semesterSekarang === 'Ganjil') {

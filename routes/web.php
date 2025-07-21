@@ -1,16 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\LoginController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\KelasController;
-use App\Http\Controllers\MataKuliahController;
-use App\Http\Controllers\MatakuliahDiampuController;
-use App\Http\Controllers\ProdiController;
-use App\Http\Controllers\SemesterController;
-use App\Http\Controllers\TugasKompensasiController;
-use App\Http\Controllers\UserController;
 use App\Models\MatakuliahSemester;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\KelasController;
+use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ProdiController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SemesterController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MataKuliahController;
+use App\Http\Controllers\TugasKompensasiController;
+use App\Http\Controllers\MatakuliahDiampuController;
 
 Route::redirect('', '/login');
 
@@ -47,6 +48,10 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/admin/export-kompen', [DashboardController::class, 'exportKompensasi'])->name('admin.dashboard.export-kompen');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Route untuk menampilkan profile
+        Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index')->middleware('auth');
+        Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
 
         Route::get("/user/datatable", [UserController::class, "datatable"])->name("user.datatable");
         Route::get('/user/kelas/select2', [UserController::class, 'select2Kelas'])->name('user.kelas.select2');
@@ -86,6 +91,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::delete('/tugas-kompensasi/detail/{id}', [TugasKompensasiController::class, 'hapusMahasiswa'])->name('tugas-kompensasi.detail.destroy');
         Route::post('/tugas-kompensasi/pilih', [TugasKompensasiController::class, 'storeMahasiswaKompensasi'])->middleware('auth');
         Route::post('/tugas-kompensasi/upload-bukti', [TugasKompensasiController::class, 'uploadBukti'])->name('tugas-kompensasi.upload.bukti');
+        Route::get('/tugas-kompensasi/bukti/{id}', [TugasKompensasiController::class, 'downloadBukti'])->name('tugas-kompensasi.download.bukti');
         Route::resource('tugas-kompensasi', TugasKompensasiController::class);
     });
 });

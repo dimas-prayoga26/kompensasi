@@ -116,7 +116,8 @@ class DashboardController extends Controller
             ->addColumn('semester', function ($row) {
                 $semesterLokal = $row->semester_lokal;
                 $isActive = $row->is_active;
-
+                // dd($row);
+                
                 if ($isActive == 0) {
                     return "Semester {$semesterLokal} (Selesai)";
                 }

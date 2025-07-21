@@ -35,43 +35,94 @@
 
         @endhasanyrole
 
-
-
-
         <ul class="navbar-nav flex-row align-items-center ms-auto">
 
         <!-- User -->
         <li class="nav-item navbar-dropdown dropdown-user dropdown">
             <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-            <div class="avatar avatar-online">
-                <img src="assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" />
-            </div>
+                <div class="avatar avatar-online">
+                    <!-- Menampilkan gambar berdasarkan role Mahasiswa atau Dosen -->
+                    @if(auth()->user()->hasRole('Mahasiswa'))
+                        <img src="{{ auth()->user()->detailMahasiswa->file_path 
+                                    ? Storage::url(auth()->user()->detailMahasiswa->file_path) 
+                                    : asset('assets/img/avatars/profile_default.jpg') }}" 
+                            alt="user-avatar" 
+                            class="avatar-img" 
+                            style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
+                    @elseif(auth()->user()->hasRole('Dosen'))
+                        <img src="{{ auth()->user()->detailDosen->file_path 
+                                    ? Storage::url(auth()->user()->detailDosen->file_path) 
+                                    : asset('assets/img/avatars/profile_default.jpg') }}" 
+                            alt="user-avatar" 
+                            class="avatar-img" 
+                            style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
+                    @else
+                        <img src="{{ asset('assets/img/avatars/profile_default.jpg') }}" 
+                            alt="user-avatar" 
+                            class="avatar-img" 
+                            style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
+                    @endif
+                </div>
             </a>
+
             <ul class="dropdown-menu dropdown-menu-end">
             <li>
                 <a class="dropdown-item" href="#">
                 <div class="d-flex">
                     <div class="flex-shrink-0 me-3">
-                    <div class="avatar avatar-online">
-                        <img src="assets/img/avatars/1.png" alt class="w-px-40 h-auto rounded-circle" />
+                        <div class="avatar avatar-online">
+                            @if(auth()->user()->hasRole('Mahasiswa'))
+                                <img src="{{ auth()->user()->detailMahasiswa->file_path 
+                                            ? Storage::url(auth()->user()->detailMahasiswa->file_path) 
+                                            : asset('assets/img/avatars/profile_default.jpg') }}" 
+                                    alt="user-avatar" 
+                                    style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
+                            @elseif(auth()->user()->hasRole('Dosen'))
+                                <img src="{{ auth()->user()->detailDosen->file_path 
+                                            ? Storage::url(auth()->user()->detailDosen->file_path) 
+                                            : asset('assets/img/avatars/profile_default.jpg') }}" 
+                                    alt="user-avatar" 
+                                    style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
+                            @else
+                                <img src="{{ asset('assets/img/avatars/profile_default.jpg') }}" 
+                                    alt="user-avatar" 
+                                    style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
+                            @endif
+                        </div>
                     </div>
+
+
+                     <div class="flex-grow-1">
+                        <!-- Menampilkan nama pengguna (first name dan last name) berdasarkan role -->
+                        @if(auth()->user()->hasRole('Mahasiswa'))
+                            <!-- Menampilkan Nama Mahasiswa -->
+                            <span class="fw-semibold d-block">{{ auth()->user()->detailMahasiswa->first_name }} {{ auth()->user()->detailMahasiswa->last_name }}</span>
+                        @elseif(auth()->user()->hasRole('Dosen'))
+                            <!-- Menampilkan Nama Dosen -->
+                            <span class="fw-semibold d-block">{{ auth()->user()->detailDosen->first_name }} {{ auth()->user()->detailDosen->last_name }}</span>
+                        @endif
+
+                        <!-- Menampilkan role pengguna yang sedang login -->
+                        <small class="text-muted">{{ ucfirst(auth()->user()->getRoleNames()->first()) }}</small>
                     </div>
-                    <div class="flex-grow-1">
-                    <span class="fw-semibold d-block">John Doe</span>
-                    <small class="text-muted">Admin</small>
-                    </div>
+
                 </div>
                 </a>
             </li>
-            <li>
-                <div class="dropdown-divider"></div>
-            </li>
-            <li>
-                <a class="dropdown-item" href="#">
-                <i class="bx bx-user me-2"></i>
-                <span class="align-middle">My Profile</span>
-                </a>
-            </li>
+            @if(!auth()->user()->hasRole('superAdmin'))
+                <li>
+                    <div class="dropdown-divider"></div>
+                </li>
+                <li>
+                <!-- Menampilkan menu My Profile jika role bukan superAdmin -->
+                    <a class="dropdown-item" href="{{ route('profile.index') }}">
+                        <i class="bx bx-user me-2"></i>
+                        <span class="align-middle">My Profile</span>
+                    </a>
+                </li>
+            @endif
+                
+
             {{-- <li>
                 <a class="dropdown-item" href="#">
                 <i class="bx bx-cog me-2"></i>

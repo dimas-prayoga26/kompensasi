@@ -52,6 +52,7 @@
     <script src="assets/js/config.js"></script>
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
   </head>
 
   <body>

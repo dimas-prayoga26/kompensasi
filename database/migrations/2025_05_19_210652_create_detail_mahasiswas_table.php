@@ -20,9 +20,11 @@ return new class extends Migration
             $table->enum('jenis_kelamin', ['Laki-laki', 'Perempuan'])->nullable();
             $table->foreignId('prodi_id')->constrained('prodis');
             $table->string('kelas')->nullable();
+            $table->string('file_path')->nullable();
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

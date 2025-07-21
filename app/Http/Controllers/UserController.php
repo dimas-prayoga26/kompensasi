@@ -69,14 +69,6 @@ class UserController extends Controller
                 ]);
                 $user->assignRole('Mahasiswa');
 
-                // $tahunAjaran = "{$tahunMasuk}/" . ($tahunMasuk + 1);
-                // Semester::firstOrCreate([
-                //     'tahun_ajaran' => $tahunAjaran,
-                //     'semester' => 'Ganjil',
-                // ], [
-                //     'no_semester' => 1
-                // ]);
-
                 DetailMahasiswa::create([
                     'user_id' => $user->id,
                     'tahun_masuk' => $tahunMasuk,

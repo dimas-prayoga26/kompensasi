@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('last_name')->nullable();
             $table->string('jenis_kelamin')->nullable();        
             $table->string('jabatan_fungsional')->nullable();   
-            $table->string('bidang_keahlian')->nullable();            
+            $table->string('bidang_keahlian')->nullable();   
+            $table->string('file_path')->nullable();         
             $table->timestamps();
         });
 

@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\FileBuktiKompensasi;
 use App\Models\User;
+use App\Models\Kompensasi;
 use Illuminate\Http\Request;
 use App\Models\TugasKompensasi;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\DB;
+use App\Models\FileBuktiKompensasi;
 use App\Models\MahasiswaKompensasi;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PenawaranKompensasiUser;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -35,7 +37,7 @@ class TugasKompensasiController extends Controller
         $validator = Validator::make($request->all(), [
             'id_dosen' => 'required|exists:users,id',
             'jumlah_mahasiswa' => 'required|integer|min:1',
-            'jumlah_menit_kompensasi' => 'required|integer|min:1', // ✅ Tambahan validasi
+            'jumlah_menit_kompensasi' => 'required|integer|min:1',
             'deskripsi_kompensasi' => 'required|string|max:255',
             'file_image' => 'required|mimes:jpeg,png,jpg,webp,xlsx,xls,pdf,doc,docx|max:2048',
         ]);
@@ -87,7 +89,7 @@ class TugasKompensasiController extends Controller
             TugasKompensasi::create([
                 'dosen_id' => $request->id_dosen,
                 'jumlah_mahasiswa' => $request->jumlah_mahasiswa,
-                'jumlah_menit_kompensasi' => $request->jumlah_menit_kompensasi, // ✅ disimpan ke DB
+                'jumlah_menit_kompensasi' => $request->jumlah_menit_kompensasi,
                 'deskripsi_kompensasi' => $request->deskripsi_kompensasi,
                 'file_path' => $filePath,
             ]);
@@ -340,6 +342,17 @@ class TugasKompensasiController extends Controller
                 ], 400);
             }
 
+            $penawaran = TugasKompensasi::findOrFail($request->kompensasi_id);
+
+            $totalTerdaftar = MahasiswaKompensasi::where('penawaran_kompensasi_id', $request->kompensasi_id)->count();
+
+            if ($totalTerdaftar >= $penawaran->jumlah_mahasiswa) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Kuota mahasiswa untuk kompensasi ini sudah penuh.'
+                ], 400);
+            }
+
             MahasiswaKompensasi::create([
                 'penawaran_kompensasi_id' => $request->kompensasi_id,
                 'user_id' => $userId
@@ -357,6 +370,7 @@ class TugasKompensasiController extends Controller
         }
     }
 
+
     public function uploadBukti(Request $request)
     {
         $request->validate([
@@ -370,38 +384,76 @@ class TugasKompensasiController extends Controller
 
             $file = $request->file('file_bukti');
             $extension = strtolower($file->getClientOriginalExtension());
-
-            // Folder dinamis berdasarkan ekstensi
             $folder = 'bukti_penawaran_kompensasi_' . $extension;
-
-            // Nama file unik
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $newFileName = $originalName . '_' . time() . '.' . $extension;
-
-            // Simpan file ke storage/app/public/...
             $filePath = $file->storeAs($folder, $newFileName, 'public');
 
-            // Simpan ke database
             FileBuktiKompensasi::create([
                 'penawaran_kompensasi_id' => $request->id,
                 'file_path' => $filePath,
                 'keterangan' => $request->keterangan,
             ]);
 
+            $penawaranUser = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $request->id)->first();
+
+            if (!$penawaranUser) {
+                throw new \Exception("User tidak ditemukan untuk penawaran kompensasi ini.");
+            }
+
+            $userId = $penawaranUser->user_id;
+
+            $penawaran = TugasKompensasi::findOrFail($request->id);
+            $jumlahMenit = $penawaran->jumlah_menit_kompensasi;
+
+            $kompensasiList = Kompensasi::where('user_id', $userId)
+                ->where('menit_kompensasi', '>', 0)
+                ->orderBy('id')
+                ->get();
+
+            $sisaMenit = $jumlahMenit;
+
+            foreach ($kompensasiList as $kompen) {
+                if ($sisaMenit <= 0) break;
+
+                $kurangi = min($kompen->menit_kompensasi, $sisaMenit);
+                $kompen->menit_kompensasi -= $kurangi;
+                $kompen->save();
+
+                $sisaMenit -= $kurangi;
+            }
+
             DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Bukti penyelesaian tugas kompensasi berhasil diupload.'
+                'message' => 'Bukti berhasil diunggah dan menit kompensasi diperbarui.'
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
-
             return response()->json([
                 'status' => false,
-                'message' => 'Terjadi kesalahan saat upload: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
             ], 500);
         }
     }
+
+    public function downloadBukti($id)
+    {
+        $fileBukti = FileBuktiKompensasi::where('penawaran_kompensasi_id', $id)->latest()->first();
+
+        if (!$fileBukti || !Storage::disk('public')->exists($fileBukti->file_path)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'File bukti tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => true,
+            'file_url' => asset('storage/' . $fileBukti->file_path),
+        ]);
+    }
+
 
 }

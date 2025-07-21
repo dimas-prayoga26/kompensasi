@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kelas;
 use App\Models\Semester;
+use App\Models\Kompensasi;
 use Illuminate\Http\Request;
 use App\Models\DetailMahasiswa;
 use Illuminate\Support\Facades\DB;
@@ -40,10 +41,8 @@ class SemesterController extends Controller
         DB::beginTransaction();
 
         try {
-            // Nonaktifkan semester sebelumnya
             Semester::where('aktif', true)->update(['aktif' => false]);
 
-            // Tambah semester baru
             $semesterBaru = Semester::create([
                 'tahun_ajaran' => $request->tahun_ajaran,
                 'semester' => $request->semester,
@@ -51,10 +50,8 @@ class SemesterController extends Controller
                 'aktif' => true,
             ]);
 
-            // Reset current_aktif
             Semester::where('current_aktif', true)->update(['current_aktif' => false]);
 
-            // Atur current_aktif berdasarkan jenis semester
             $tahunBaru = $request->tahun_ajaran;
             $jenisSemester = $request->semester;
             $tahunPecah = explode('/', $tahunBaru);
@@ -70,11 +67,8 @@ class SemesterController extends Controller
                     ->update(['current_aktif' => true]);
             }
 
-
-            // Ambil ID semester baru
             $semesterIdBaru = $semesterBaru->id;
 
-            // Ambil mahasiswa dari semester sebelumnya (non-aktif)
             $mahasiswaList = KelasSemesterMahasiswa::whereHas('semester', function ($query) {
                 $query->where('aktif', false);
             })->get();
@@ -93,6 +87,10 @@ class SemesterController extends Controller
                     $item->update(['is_active' => false]);
                     continue;
                 }
+
+                Kompensasi::where('user_id', $item->user_id)
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
 
                 $kelasLama = Kelas::find($item->kelas_id);
                 $kelasBaruId = $item->kelas_id;

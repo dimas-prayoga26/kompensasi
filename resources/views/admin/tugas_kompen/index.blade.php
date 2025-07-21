@@ -374,6 +374,12 @@
                         }
                     },
                     {
+                        targets: 4,
+                        render: function (data, type, full, meta) {
+                            return full.jumlah_menit_kompensasi ? full.jumlah_menit_kompensasi + ' menit' : '-';
+                        }
+                    },
+                    {
                         targets: 5,
                         render: function (data, type, full, meta) {
                             return full.deskripsi_kompensasi || '-';
@@ -382,15 +388,19 @@
                     {
                         targets: 6,
                         render: function (data, type, full, meta) {
-                            const currentUserId = parseInt(currentUserID); // dari Blade
+                            const currentUserId = parseInt(currentUserID);
                             const userSudahTerdaftar = full.penawaran_users?.some(pu => parseInt(pu.user_id) === currentUserId);
 
                             if (currentUserRole === 'Mahasiswa') {
-                                let html = `
-                                    <button type="button" class="btn btn-success btn-sm" onclick="pilihData(${full.id})">
-                                        <i class="fe fe-check"></i> Pilih
-                                    </button>
-                                `;
+                                let html = '';
+
+                                if (!userSudahTerdaftar) {
+                                    html += `
+                                        <button type="button" class="btn btn-success btn-sm" onclick="pilihData(${full.id})">
+                                            <i class="fe fe-check"></i> Pilih
+                                        </button>
+                                    `;
+                                }
 
                                 if (userSudahTerdaftar) {
                                     html += `
@@ -420,6 +430,7 @@
                         }
                     }
 
+
                 ],
                 columns: columnsConfig,
                 language: {
@@ -428,6 +439,32 @@
                 }
             });
         });
+
+        function downloadBukti(id) {
+            const url = "{{ route('tugas-kompensasi.download.bukti', ['id' => ':id']) }}".replace(':id', id);
+
+            $.ajax({
+                url: url,
+                method: 'GET',
+                success: function(response) {
+                    if (response.status && response.file_url) {
+                        const link = document.createElement('a');
+                        link.href = response.file_url;
+                        link.setAttribute('download', ''); // Memaksa browser untuk download
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } else {
+                        Swal.fire('Gagal', response.message || 'File tidak ditemukan.', 'error');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.responseJSON?.message || 'Terjadi kesalahan saat mengambil bukti.', 'error');
+                }
+            });
+        }
+
+
 
         function uploadBukti(id) {
             $('#upload_id_kompensasi').val(id);

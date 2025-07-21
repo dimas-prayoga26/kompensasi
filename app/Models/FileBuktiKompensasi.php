@@ -10,7 +10,7 @@ class FileBuktiKompensasi extends Model
 
     protected $guarded = [''];
 
-    protected $table = 'file_bukti_penawaran_kompensasi';
+    protected $table = 'file_bukti_penawaran_kompensasis';
 
     public function tugasKompensasi()
     {
