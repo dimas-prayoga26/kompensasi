@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('penawaran_kompensasi_id')->constrained('penawaran_kompensasis')->onDelete('cascade');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('file_path');
+            $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }

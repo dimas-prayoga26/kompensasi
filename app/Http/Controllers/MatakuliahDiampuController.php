@@ -582,4 +582,22 @@ class MatakuliahDiampuController extends Controller
 
     }
 
+    public function delete($id)
+    {
+        $dosenMatakuliah = DosenMatakuliah::find($id);
+
+        // dd($dosenMatakuliah);
+        
+        if (!$dosenMatakuliah) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        }
+
+        $dosenMatakuliah->delete();
+
+        return response()->json([
+            'status' => true,
+            'message' => "Berhasil menghapus matakuliah diampu."
+        ]);
+    }
+
 }

@@ -78,6 +78,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/matakuliah-diampu/kelas/select2', [MatakuliahDiampuController::class, 'select2Kelas'])->name('matakuliah-diampu.kelas.select2');
         Route::get('/matakuliah-diampu/mahasiswa-aktif/{id}', [MatakuliahDiampuController::class, 'editDataMahasiswaAktif'])->name('matakuliah-diampu.mahasiswa-aktif.select2');
         Route::get('/matakuliah-diampu/{id}/tahun-ajaran', [MatakuliahDiampuController::class, 'getTahunAjaranLamaBaru'])->name('matakuliah-diampu.tahun-ajaran');
+        Route::delete('/matakuliah-diampu/delete/{id}', [MatakuliahDiampuController::class, 'delete'])->name('matakuliah-diampu.delete');
         Route::put('/matakuliah-diampu/{id}/refresh', [MatakuliahDiampuController::class, 'refreshKompensasi'])->name('matakuliah-diampu.refresh');
         Route::get('/matakuliah-diampu/kompensasi/{id}', [MatakuliahDiampuController::class, 'show'])->name('matakuliah-diampu.kompensasi.show');
         Route::get('/matakuliah-diampu/kompensasi/{id}/detail', [MatakuliahDiampuController::class, 'kompensasiDetail'])->name('matakuliah-diampu.kompensasi.detail');

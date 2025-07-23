@@ -40,15 +40,22 @@
     <div class="row">
       <div class="col-lg-12 mb-4 order-0">
           <div class="card">
-            <div class="d-flex justify-content-between align-items-center p-3">
-                  <h5 class="mb-0">Daftar Data Tugas Kompensasi</h5>
-                    @role('superAdmin|Dosen')
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahData">
-                        + Tambah Data
-                        </button>
-                    @endrole
+            <div class="d-flex justify-content-between align-items-center p-3 flex-wrap gap-2">
+                <h5 class="mb-0">Daftar Data Tugas Kompensasi</h5>
 
-              </div>
+                <div class="d-flex gap-2">
+                    @role('superAdmin|Dosen')
+                        <a href="{{ asset('template_kompen/BUKTI_KOMPENSASI.docx') }}" class="btn btn-outline-secondary" download>
+                            <i class="bx bx-download"></i> Download Template
+                        </a>
+
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahData">
+                            + Tambah Data
+                        </button>
+
+                    @endrole
+                </div>
+            </div>
               <div class="d-flex align-items-end row">
                   <div class="col-sm-12">
                       <div class="card-body">
@@ -119,7 +126,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="tambah_file_image" class="form-label">Upload Gambar Pendukung (Opsional)</label>
+                            <label for="tambah_file_image" class="form-label">Upload File Pendukung (Opsional)</label>
                             <input type="file" class="form-control" id="tambah_file_image" name="file_image" 
                                 accept="image/*,.pdf,.doc,.docx,.xls,.xlsx">
                         </div>
@@ -239,7 +246,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" name="id" id="upload_id_kompensasi">
+                        <input type="hidden" name="id" id="uploadBuktiId">
 
                         <div class="mb-3">
                             <label for="file_bukti" class="form-label">Pilih File Bukti</label>
@@ -416,9 +423,6 @@
                                     <button type="button" class="btn btn-info btn-sm" onclick="detailData(${full.id})">
                                         <i class="fe fe-eye"></i> Detail
                                     </button>
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="uploadBukti(${full.id})">
-                                        <i class="fe fe-upload"></i> Upload Bukti
-                                    </button>
                                     <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
                                         <i class="fe fe-edit"></i> Edit
                                     </button>
@@ -464,10 +468,55 @@
             });
         }
 
+        function showImagePreview(url) {
+            $("#previewImage").attr("src", url);
+            $("#modalImagePreview").modal("show");
+        }
+
+        function detailData(id) {
+            $('#modalDetailData').modal('show');
+
+            if ($.fn.DataTable.isDataTable('#detailDatatable')) {
+                $('#detailDatatable').DataTable().destroy();
+            }
+
+            $('#detailDatatable').DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: `/portal/tugas-kompensasi/${id}/detail`,
+                    type: 'GET'
+                },
+                columns: [
+                    { data: null, name: 'no', render: (data, type, row, meta) => meta.row + 1 },
+                    { data: 'nim', name: 'nim' },
+                    { data: 'nama_mahasiswa', name: 'nama_mahasiswa' },
+                    { data: 'kelas', name: 'kelas' },
+                    {
+                        data: 'id',
+                        name: 'id',
+                        render: function (data, type, row, full) {
+                            console.log(data);
+                            
+                            return `
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-danger btn-sm" onclick="hapusMahasiswa(${data})">
+                                        <i class="fe fe-trash"></i> Hapus
+                                    </button>
+                                    <button class="btn btn-success btn-sm" onclick="uploadBukti(${data})">
+                                        <i class="fe fe-upload"></i> Upload Bukti
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }
+                ]
+            });
+        }
 
 
         function uploadBukti(id) {
-            $('#upload_id_kompensasi').val(id);
+            $('#uploadBuktiId').val(id);
             $('#file_bukti').val('');
             $('#preview_upload_image').addClass('d-none');
             $('#preview_upload_file').addClass('d-none').html('');
@@ -503,13 +552,15 @@
             const modalEl = document.getElementById('modalUploadBukti');
             const modalInstance = bootstrap.Modal.getInstance(modalEl);
 
-            // Tutup modal terlebih dahulu
+            // Tutup modal Upload Bukti
             modalInstance.hide();
 
-            // Tampilkan SweetAlert loader SETELAH modal tertutup
-            modalEl.addEventListener('hidden.bs.modal', function showLoader() {
-                modalEl.removeEventListener('hidden.bs.modal', showLoader);
+            // Jalankan setelah modal benar-benar tertutup
+            $(modalEl).one('hidden.bs.modal', function () {
+                // Tutup semua modal aktif untuk mencegah tumpang tindih
+                $('.modal.show').modal('hide');
 
+                // Tampilkan loading
                 Swal.fire({
                     title: 'Mengunggah...',
                     text: 'Mohon tunggu sebentar.',
@@ -517,7 +568,7 @@
                     didOpen: () => Swal.showLoading()
                 });
 
-                // Jalankan AJAX di sini setelah modal benar-benar tertutup
+                // Kirim data via AJAX
                 $.ajax({
                     url: "{{ route('tugas-kompensasi.upload.bukti') }}",
                     type: "POST",
@@ -528,7 +579,6 @@
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
                     success: function(res) {
-                        $('#formUploadBukti')[0].reset();
                         $('#preview_upload_image').addClass('d-none').attr('src', '#');
                         $('#preview_upload_file').addClass('d-none').html('');
 
@@ -540,11 +590,12 @@
                             showConfirmButton: false
                         });
 
-                        // $('#datatable').DataTable().ajax.reload(); // kalau pakai datatable
+                        $("#formUploadBukti")[0].reset();
+                        $('#detailDatatable').DataTable().ajax.reload();
                     },
                     error: function(xhr) {
                         let message = 'Terjadi kesalahan saat menyimpan data.';
-                        
+
                         if (xhr.responseJSON?.errors) {
                             const errors = Object.values(xhr.responseJSON.errors).flat().join('\n');
                             message = errors;
@@ -563,49 +614,6 @@
             });
         });
 
-
-
-
-        function showImagePreview(url) {
-            $("#previewImage").attr("src", url);
-            $("#modalImagePreview").modal("show");
-        }
-
-        function detailData(id) {
-            $('#modalDetailData').modal('show');
-
-            // Jika datatable sudah pernah dibuat, hancurkan dulu agar tidak duplikat
-            if ($.fn.DataTable.isDataTable('#detailDatatable')) {
-                $('#detailDatatable').DataTable().destroy();
-            }
-
-            // Buat datatable detail
-            $('#detailDatatable').DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: `/portal/tugas-kompensasi/${id}/detail`,
-                    type: 'GET'
-                },
-                columns: [
-                    { data: null, name: 'no', render: (data, type, row, meta) => meta.row + 1 },
-                    { data: 'nim', name: 'nim' },
-                    { data: 'nama_mahasiswa', name: 'nama_mahasiswa' },
-                    { data: 'kelas', name: 'kelas' },
-                    {
-                        data: 'id',
-                        name: 'id',
-                        render: function (data, type, row) {
-                            return `
-                                <button class="btn btn-danger btn-sm" onclick="hapusMahasiswa(${data})">
-                                    <i class="fe fe-trash"></i> Hapus
-                                </button>
-                            `;
-                        }
-                    }
-                ]
-            });
-        }
 
         function hapusMahasiswa(id) {
             $('#modalDetailData').modal('hide');

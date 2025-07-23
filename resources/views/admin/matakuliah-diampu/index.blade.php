@@ -358,7 +358,7 @@
                     render: function (data, type, full, meta) {
                         return `
                             <div class="d-flex flex-column gap-1">
-                                <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
+                                <button type="button" class="btn btn-success btn-sm" onclick="editData(${full.id})">
                                     <i class="fe fe-edit"></i> Perbarui Data Kompen Tahun Ajaran Baru
                                 </button>
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="editDataMahasiswaAktif(${full.id})">
@@ -393,8 +393,11 @@
                                 <a href="/portal/matakuliah-diampu/kompensasi/${full.id}" class="btn btn-info btn-sm ${disableClass}">
                                     <i class="fe fe-eye"></i> Detail
                                 </a>
-                                <button type="button" class="btn btn-danger btn-sm ${disableClass}" onclick="hapusData(${full.id})">
-                                    <i class="fe fe-trash"></i> Hapus
+                                <button type="button" class="btn btn-warning btn-sm ${disableClass}" onclick="hapusData(${full.id})">
+                                    <i class="fe fe-trash"></i> Hapus list kompen mahasiswa
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="hapusDataPengampu(${full.id})">
+                                    <i class="fe fe-trash"></i> Hapus data matakuliah yang diampu
                                 </button>
                             </div>
                         `;
@@ -673,7 +676,62 @@
                                 timer: 1500,
                                 showConfirmButton: false,
                             });
-                            table.ajax.reload();
+                            $('#datatable').DataTable().ajax.reload();
+                        } else {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Gagal',
+                                text: response.message || 'Data tidak ditemukan.',
+                                showConfirmButton: true,
+                            });
+                        }
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || xhr.responseText || 'Terjadi Kesalahan';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: message,
+                            showConfirmButton: true,
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    const urlDeleteMatakuliahDiampu = "{{ route('matakuliah-diampu.delete', ':id') }}";
+
+    function hapusDataPengampu(id) {
+        const url = urlDeleteMatakuliahDiampu.replace(':id', id);
+
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: "Data yang dihapus tidak dapat dikembalikan!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Ya, hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: url,
+                    type: "DELETE",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.status === true) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false,
+                            });
+                            $('#datatable').DataTable().ajax.reload();
                         } else {
                             Swal.fire({
                                 icon: 'warning',

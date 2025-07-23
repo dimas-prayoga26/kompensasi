@@ -41,23 +41,22 @@
         <li class="nav-item navbar-dropdown dropdown-user dropdown">
             <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                 <div class="avatar avatar-online">
-                    <!-- Menampilkan gambar berdasarkan role Mahasiswa atau Dosen -->
                     @if(auth()->user()->hasRole('Mahasiswa'))
                         <img src="{{ auth()->user()->detailMahasiswa->file_path 
                                     ? Storage::url(auth()->user()->detailMahasiswa->file_path) 
-                                    : asset('assets/img/avatars/profile_default.jpg') }}" 
+                                    : 'assets/img/avatars/profile_default.jpg' }}" 
                             alt="user-avatar" 
                             class="avatar-img" 
                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
                     @elseif(auth()->user()->hasRole('Dosen'))
                         <img src="{{ auth()->user()->detailDosen->file_path 
                                     ? Storage::url(auth()->user()->detailDosen->file_path) 
-                                    : asset('assets/img/avatars/profile_default.jpg') }}" 
+                                    : 'assets/img/avatars/profile_default.jpg' }}" 
                             alt="user-avatar" 
                             class="avatar-img" 
                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
                     @else
-                        <img src="{{ asset('assets/img/avatars/profile_default.jpg') }}" 
+                        <img src="assets/img/avatars/profile_default.jpg" 
                             alt="user-avatar" 
                             class="avatar-img" 
                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
@@ -74,17 +73,17 @@
                             @if(auth()->user()->hasRole('Mahasiswa'))
                                 <img src="{{ auth()->user()->detailMahasiswa->file_path 
                                             ? Storage::url(auth()->user()->detailMahasiswa->file_path) 
-                                            : asset('assets/img/avatars/profile_default.jpg') }}" 
+                                            : 'assets/img/avatars/profile_default.jpg' }}" 
                                     alt="user-avatar" 
                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
                             @elseif(auth()->user()->hasRole('Dosen'))
                                 <img src="{{ auth()->user()->detailDosen->file_path 
                                             ? Storage::url(auth()->user()->detailDosen->file_path) 
-                                            : asset('assets/img/avatars/profile_default.jpg') }}" 
+                                            : 'assets/img/avatars/profile_default.jpg' }}" 
                                     alt="user-avatar" 
                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
                             @else
-                                <img src="{{ asset('assets/img/avatars/profile_default.jpg') }}" 
+                                <img src="assets/img/avatars/profile_default.jpg" 
                                     alt="user-avatar" 
                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
                             @endif
@@ -95,12 +94,22 @@
                      <div class="flex-grow-1">
                         <!-- Menampilkan nama pengguna (first name dan last name) berdasarkan role -->
                         @if(auth()->user()->hasRole('Mahasiswa'))
-                            <!-- Menampilkan Nama Mahasiswa -->
-                            <span class="fw-semibold d-block">{{ auth()->user()->detailMahasiswa->first_name }} {{ auth()->user()->detailMahasiswa->last_name }}</span>
+    <!-- Menampilkan Nama Mahasiswa -->
+                            <span class="fw-semibold d-block">
+                                {{ auth()->user()->detailMahasiswa->first_name }} {{ auth()->user()->detailMahasiswa->last_name }}
+                            </span>
                         @elseif(auth()->user()->hasRole('Dosen'))
                             <!-- Menampilkan Nama Dosen -->
-                            <span class="fw-semibold d-block">{{ auth()->user()->detailDosen->first_name }} {{ auth()->user()->detailDosen->last_name }}</span>
+                            <span class="fw-semibold d-block">
+                                {{ auth()->user()->detailDosen->first_name }} {{ auth()->user()->detailDosen->last_name }}
+                            </span>
+                        @elseif(auth()->user()->hasRole('superAdmin'))
+                            <!-- Menampilkan nama statis untuk superAdmin -->
+                            <span class="fw-semibold d-block">
+                                Ketua Jurusan
+                            </span>
                         @endif
+
 
                         <!-- Menampilkan role pengguna yang sedang login -->
                         <small class="text-muted">{{ ucfirst(auth()->user()->getRoleNames()->first()) }}</small>

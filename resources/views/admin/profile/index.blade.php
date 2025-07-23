@@ -41,12 +41,12 @@
                         <img src="{{ auth()->user()->hasRole('Mahasiswa') 
                                     ? (auth()->user()->detailMahasiswa->file_path 
                                         ? Storage::url(auth()->user()->detailMahasiswa->file_path) 
-                                        : asset('assets/img/avatars/profile_default.jpg')) 
+                                        : 'assets/img/avatars/profile_default.jpg')
                                     : (auth()->user()->hasRole('Dosen') 
                                         ? (auth()->user()->detailDosen->file_path 
                                             ? Storage::url(auth()->user()->detailDosen->file_path) 
                                             : asset('assets/img/avatars/profile_default.jpg')) 
-                                        : asset('assets/img/avatars/profile_default.jpg')) }}" 
+                                        : 'assets/img/avatars/profile_default.jpg') }}" 
                         alt="user-avatar" 
                         class="d-block rounded" 
                         height="100" 
@@ -120,7 +120,7 @@
                                 </div>
                                 <div class="mb-3 col-md-6">
                                     <label for="prodi_id" class="form-label">Program Studi</label>
-                                    <input class="form-control" type="text" name="prodi_id" value="{{ auth()->user()->detailMahasiswa->prodi->name }}" disabled />
+                                    <input class="form-control" type="text" name="prodi_id" value="{{ auth()->user()->detailMahasiswa->prodi->nama }}" disabled />
                                 </div>
                                 <div class="mb-3 col-md-6">
                                     <label for="kelas" class="form-label">Kelas</label>

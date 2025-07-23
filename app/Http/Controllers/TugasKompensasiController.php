@@ -287,15 +287,15 @@ class TugasKompensasiController extends Controller
 
     public function detail($id)
     {
-        $data = MahasiswaKompensasi::where('penawaran_kompensasi_id', $id)
-            ->with(['mahasiswa.detailMahasiswa'])
+        $data = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $id)
+            ->with(['user.detailMahasiswa'])
             ->get()
             ->map(function ($item) {
-                $detail = $item->mahasiswa->detailMahasiswa;
+                $detail = $item->user->detailMahasiswa;
 
                 return [
                     'id' => $item->id,
-                    'nim' => $item->mahasiswa->nim,
+                    'nim' => $item->user->nim,
                     'nama_mahasiswa' => $detail ? "{$detail->first_name} {$detail->last_name}" : '-',
                     'kelas' => $detail->kelas ?? '-',
                 ];
@@ -307,7 +307,7 @@ class TugasKompensasiController extends Controller
     public function hapusMahasiswa($id)
     {
         try {
-            $mahasiswa = MahasiswaKompensasi::findOrFail($id);
+            $mahasiswa = PenawaranKompensasiUser::findOrFail($id);
             $mahasiswa->delete();
 
             return response()->json([
@@ -328,10 +328,11 @@ class TugasKompensasiController extends Controller
             'kompensasi_id' => 'required|exists:penawaran_kompensasis,id'
         ]);
 
+
         try {
             $userId = Auth::id();
 
-            $exists = MahasiswaKompensasi::where('penawaran_kompensasi_id', $request->kompensasi_id)
+            $exists = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $request->kompensasi_id)
                         ->where('user_id', $userId)
                         ->exists();
 
@@ -344,7 +345,7 @@ class TugasKompensasiController extends Controller
 
             $penawaran = TugasKompensasi::findOrFail($request->kompensasi_id);
 
-            $totalTerdaftar = MahasiswaKompensasi::where('penawaran_kompensasi_id', $request->kompensasi_id)->count();
+            $totalTerdaftar = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $request->kompensasi_id)->count();
 
             if ($totalTerdaftar >= $penawaran->jumlah_mahasiswa) {
                 return response()->json([
@@ -353,7 +354,7 @@ class TugasKompensasiController extends Controller
                 ], 400);
             }
 
-            MahasiswaKompensasi::create([
+            PenawaranKompensasiUser::create([
                 'penawaran_kompensasi_id' => $request->kompensasi_id,
                 'user_id' => $userId
             ]);
@@ -374,10 +375,11 @@ class TugasKompensasiController extends Controller
     public function uploadBukti(Request $request)
     {
         $request->validate([
-            'id' => 'required|exists:penawaran_kompensasis,id',
+            'id' => 'required|exists:penawaran_kompensasi_users,id', // ✅ BENAR
             'file_bukti' => 'required|file|max:5120|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx',
             'keterangan' => 'nullable|string|max:1000',
         ]);
+
 
         try {
             DB::beginTransaction();
@@ -389,29 +391,28 @@ class TugasKompensasiController extends Controller
             $newFileName = $originalName . '_' . time() . '.' . $extension;
             $filePath = $file->storeAs($folder, $newFileName, 'public');
 
-            FileBuktiKompensasi::create([
-                'penawaran_kompensasi_id' => $request->id,
-                'file_path' => $filePath,
-                'keterangan' => $request->keterangan,
-            ]);
+            $penawaranUser = PenawaranKompensasiUser::where('id', $request->id)->first();
 
-            $penawaranUser = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $request->id)->first();
+            // dd($penawaranUser);
 
             if (!$penawaranUser) {
                 throw new \Exception("User tidak ditemukan untuk penawaran kompensasi ini.");
             }
 
-            $userId = $penawaranUser->user_id;
+            $penawaranUser->update([
+                'file_path' => $filePath,
+                'keterangan' => $request->keterangan,
+            ]);
 
-            $penawaran = TugasKompensasi::findOrFail($request->id);
+            $userId = $penawaranUser->user_id;
+            $penawaran = TugasKompensasi::findOrFail($penawaranUser->penawaran_kompensasi_id);
             $jumlahMenit = $penawaran->jumlah_menit_kompensasi;
+            $sisaMenit = $jumlahMenit;
 
             $kompensasiList = Kompensasi::where('user_id', $userId)
                 ->where('menit_kompensasi', '>', 0)
                 ->orderBy('id')
                 ->get();
-
-            $sisaMenit = $jumlahMenit;
 
             foreach ($kompensasiList as $kompen) {
                 if ($sisaMenit <= 0) break;
@@ -438,11 +439,14 @@ class TugasKompensasiController extends Controller
         }
     }
 
+
     public function downloadBukti($id)
     {
-        $fileBukti = FileBuktiKompensasi::where('penawaran_kompensasi_id', $id)->latest()->first();
+        $penawaranUser = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $id)
+                        ->where('user_id', auth()->id())
+                        ->first();
 
-        if (!$fileBukti || !Storage::disk('public')->exists($fileBukti->file_path)) {
+        if (!$penawaranUser || !$penawaranUser->file_path || !Storage::disk('public')->exists($penawaranUser->file_path)) {
             return response()->json([
                 'status' => false,
                 'message' => 'File bukti tidak ditemukan.',
@@ -451,9 +455,8 @@ class TugasKompensasiController extends Controller
 
         return response()->json([
             'status' => true,
-            'file_url' => asset('storage/' . $fileBukti->file_path),
+            'file_url' => asset('storage/' . $penawaranUser->file_path),
         ]);
     }
-
 
 }
