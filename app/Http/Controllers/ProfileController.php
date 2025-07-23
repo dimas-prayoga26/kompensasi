@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 
 class ProfileController extends Controller
 {
@@ -61,6 +63,31 @@ class ProfileController extends Controller
         // Menyimpan pesan sukses ke sesi
         return redirect()->route('profile.index')->with('success', 'Profil berhasil diperbarui');
     }
+
+    public function ubahPassword(Request $request)
+    {
+        $request->validate([
+            'password_lama' => ['required'],
+            'password_baru' => ['required', 'min:6', 'confirmed'],
+        ]);
+
+        $user = auth()->user();
+
+        if (!Hash::check($request->password_lama, $user->password)) {
+            return back()->withErrors(['password_lama' => 'Password lama tidak sesuai.']);
+        }
+
+        $user->password = bcrypt($request->password_baru);
+        $user->save();
+
+        // Simpan pesan ke flash SEBELUM logout
+        Session::flash('success', 'Password berhasil diperbarui. Silakan login kembali.');
+
+        Auth::logout();
+
+        return redirect()->route('mahasiswa.login')->with('success', 'Password berhasil diperbarui. Silakan login kembali.');
+    }
+
 
 
 

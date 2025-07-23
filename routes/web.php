@@ -24,17 +24,17 @@ Route::get('/login', function () {
 Route::group(["middleware" => ["guest"]], function() {
     // routes/web.php
 
-Route::group(['middleware' => 'guest'], function () {
-    Route::prefix('mahasiswa')->group(function () {
-        Route::get('/login', [LoginController::class, 'showLoginForm'])->name('mahasiswa.login');
-        Route::post('/login', [LoginController::class, 'login'])->name('mahasiswa.login.post');
-    });
+    Route::group(['middleware' => 'guest'], function () {
+        Route::prefix('mahasiswa')->group(function () {
+            Route::get('/login', [LoginController::class, 'showLoginForm'])->name('mahasiswa.login');
+            Route::post('/login', [LoginController::class, 'login'])->name('mahasiswa.login.post');
+        });
 
-    Route::prefix('dosen')->group(function () {
-        Route::get('/login', [LoginController::class, 'showLoginForm'])->name('dosen.login');
-        Route::post('/login', [LoginController::class, 'login'])->name('dosen.login.post');
+        Route::prefix('dosen')->group(function () {
+            Route::get('/login', [LoginController::class, 'showLoginForm'])->name('dosen.login');
+            Route::post('/login', [LoginController::class, 'login'])->name('dosen.login.post');
+        });
     });
-});
 
 });
 
@@ -52,6 +52,8 @@ Route::middleware(['web', 'auth'])->group(function () {
         // Route untuk menampilkan profile
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index')->middleware('auth');
         Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+        Route::post('/profile/ubah-password', [ProfileController::class, 'ubahPassword'])->name('ubah-password');
+
 
         Route::get("/user/datatable", [UserController::class, "datatable"])->name("user.datatable");
         Route::get('/user/kelas/select2', [UserController::class, 'select2Kelas'])->name('user.kelas.select2');
@@ -90,6 +92,7 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get("/tugas-kompensasi/datatable", [TugasKompensasiController::class, "datatable"])->name("tugas-kompensasi.datatable");
         Route::get('/tugas-kompensasi/{id}/detail', [TugasKompensasiController::class, 'detail']);
         Route::delete('/tugas-kompensasi/detail/{id}', [TugasKompensasiController::class, 'hapusMahasiswa'])->name('tugas-kompensasi.detail.destroy');
+        Route::get('/tugas-kompensasi/{id}/get-upload', [TugasKompensasiController::class, 'getUploadData']);
         Route::post('/tugas-kompensasi/pilih', [TugasKompensasiController::class, 'storeMahasiswaKompensasi'])->middleware('auth');
         Route::post('/tugas-kompensasi/upload-bukti', [TugasKompensasiController::class, 'uploadBukti'])->name('tugas-kompensasi.upload.bukti');
         Route::get('/tugas-kompensasi/bukti/{id}', [TugasKompensasiController::class, 'downloadBukti'])->name('tugas-kompensasi.download.bukti');

@@ -459,4 +459,31 @@ class TugasKompensasiController extends Controller
         ]);
     }
 
+    // CodeIgniter
+    public function getUploadData($id)
+    {
+        $data = PenawaranKompensasiUser::find($id);
+        // dd($data);
+
+        if ($data && $data->file_path) {
+            $relativePath = 'storage/' . $data->file_path;
+
+            if (file_exists(public_path($relativePath))) {
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'file_url' => asset($relativePath),
+                        'keterangan' => $data->keterangan ?? ''
+                    ]
+                ]);
+            }
+        }
+
+        return response()->json([
+            'status' => false,
+            'message' => 'Data atau file tidak ditemukan'
+        ], 404);
+    }
+
+
 }

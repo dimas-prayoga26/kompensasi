@@ -137,15 +137,57 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="mt-2">
-                            <button type="submit" class="btn btn-primary me-2">Save changes</button>
-                            <button type="reset" class="btn btn-outline-secondary">Cancel</button>
+                       <div class="mt-2 d-flex align-items-center">
+                            <div>
+                                <button type="submit" class="btn btn-primary me-2">Simpan Perubahan</button>
+                                <button type="reset" class="btn btn-outline-secondary me-2">Batal</button>
+                            </div>
+                            
+                            <button type="button" class="btn btn-warning ms-auto" data-bs-toggle="modal" data-bs-target="#modalUbahPassword">
+                                Ubah Password
+                            </button>
                         </div>
+
                     </div>
                 </div>
             </form>
         </div>
     </div>
+
+    <div class="modal fade" id="modalUbahPassword" tabindex="-1" aria-labelledby="modalUbahPasswordLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ route('ubah-password') }}" method="POST">
+                    @csrf
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalUbahPasswordLabel">Ubah Password</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="password_lama" class="form-label">Password Lama</label>
+                            <input type="password" class="form-control" id="password_lama" name="password_lama" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password_baru" class="form-label">Password Baru</label>
+                            <input type="password" class="form-control" id="password_baru" name="password_baru" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="konfirmasi_password" class="form-label">Konfirmasi Password Baru</label>
+                            <input type="password" class="form-control" id="konfirmasi_password" name="password_baru_confirmation" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary">Simpan Password</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+
 </div>
 
 @endsection

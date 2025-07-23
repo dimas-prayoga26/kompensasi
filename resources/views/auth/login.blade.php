@@ -131,13 +131,12 @@
                   </div>
               @endif
 
-              @if ($errors->any())
+              @if (session('error'))
                   <div id="error-alert" class="alert alert-danger alert-dismissible fade show" role="alert">
-                      {{ $errors->first() }}
+                      {{ session('error') }}
                       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                   </div>
               @endif
-
 
               <form method="POST" action="{{ $tipe === 'mahasiswa' ? route('mahasiswa.login.post') : route('dosen.login.post') }}">
                 @csrf

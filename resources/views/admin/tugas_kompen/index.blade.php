@@ -517,11 +517,43 @@
 
         function uploadBukti(id) {
             $('#uploadBuktiId').val(id);
+
+            // Reset form
             $('#file_bukti').val('');
-            $('#preview_upload_image').addClass('d-none');
+            $('#keterangan').val('');
+            $('#preview_upload_image').addClass('d-none').attr('src', '#');
             $('#preview_upload_file').addClass('d-none').html('');
+
+            $.ajax({
+                url: `/portal/tugas-kompensasi/${id}/get-upload`,
+                type: 'GET',
+                success: function (res) {
+                    if (res.success) {
+                        const fileUrl = res.data.file_url;
+                        const fileExt = fileUrl.split('.').pop().toLowerCase();
+                        const keterangan = res.data.keterangan || '';
+
+                        $('#keterangan').val(keterangan);
+
+                        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+                            $('#preview_upload_image').attr('src', fileUrl).removeClass('d-none');
+                            $('#preview_upload_file').addClass('d-none').html('');
+                        } else {
+                            $('#preview_upload_file').removeClass('d-none').html(
+                                `<a href="${fileUrl}" target="_blank" class="text-primary">Lihat dokumen sebelumnya</a>`
+                            );
+                            $('#preview_upload_image').addClass('d-none').attr('src', '#');
+                        }
+                    }
+                },
+                error: function () {
+                    console.warn('Tidak ada data upload sebelumnya atau gagal mengambil data.');
+                }
+            });
+
             $('#modalUploadBukti').modal('show');
         }
+
 
         $('#file_bukti').on('change', function() {
             const file = this.files[0];
