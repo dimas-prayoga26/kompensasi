@@ -41,28 +41,26 @@
         <li class="nav-item navbar-dropdown dropdown-user dropdown">
             <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                 <div class="avatar avatar-online">
-                    @if(auth()->user()->hasRole('Mahasiswa'))
-                        <img src="{{ auth()->user()->detailMahasiswa->file_path 
-                                    ? Storage::url(auth()->user()->detailMahasiswa->file_path) 
-                                    : 'assets/img/avatars/profile_default.jpg' }}" 
-                            alt="user-avatar" 
-                            class="avatar-img" 
-                            style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
-                    @elseif(auth()->user()->hasRole('Dosen'))
-                        <img src="{{ auth()->user()->detailDosen->file_path 
-                                    ? Storage::url(auth()->user()->detailDosen->file_path) 
-                                    : 'assets/img/avatars/profile_default.jpg' }}" 
-                            alt="user-avatar" 
-                            class="avatar-img" 
-                            style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
-                    @else
-                        <img src="assets/img/avatars/profile_default.jpg" 
-                            alt="user-avatar" 
-                            class="avatar-img" 
-                            style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
-                    @endif
+                    @php
+                        $defaultAvatar = 'assets/img/avatars/profile_default.jpg';
+                        $user = auth()->user();
+                        $imagePath = $defaultAvatar;
+
+                        if ($user->hasRole('Mahasiswa') && $user->detailMahasiswa && $user->detailMahasiswa->file_path) {
+                            $imagePath = Storage::url($user->detailMahasiswa->file_path);
+                        } elseif ($user->hasRole('Dosen') && $user->detailDosen && $user->detailDosen->file_path) {
+                            $imagePath = Storage::url($user->detailDosen->file_path);
+                        }
+                    @endphp
+
+                    <img src="{{ $imagePath }}" 
+                        alt="user-avatar" 
+                        class="avatar-img" 
+                        style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
                 </div>
             </a>
+
+
 
             <ul class="dropdown-menu dropdown-menu-end">
             <li>
@@ -70,50 +68,44 @@
                 <div class="d-flex">
                     <div class="flex-shrink-0 me-3">
                         <div class="avatar avatar-online">
-                            @if(auth()->user()->hasRole('Mahasiswa'))
-                                <img src="{{ auth()->user()->detailMahasiswa->file_path 
-                                            ? Storage::url(auth()->user()->detailMahasiswa->file_path) 
-                                            : 'assets/img/avatars/profile_default.jpg' }}" 
-                                    alt="user-avatar" 
-                                    style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
-                            @elseif(auth()->user()->hasRole('Dosen'))
-                                <img src="{{ auth()->user()->detailDosen->file_path 
-                                            ? Storage::url(auth()->user()->detailDosen->file_path) 
-                                            : 'assets/img/avatars/profile_default.jpg' }}" 
-                                    alt="user-avatar" 
-                                    style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
-                            @else
-                                <img src="assets/img/avatars/profile_default.jpg" 
-                                    alt="user-avatar" 
-                                    style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
-                            @endif
+                            @php
+                                $user = auth()->user();
+                                $defaultAvatar = 'assets/img/avatars/profile_default.jpg';
+                                $avatar = $defaultAvatar;
+
+                                if ($user->hasRole('Mahasiswa') && $user->detailMahasiswa && $user->detailMahasiswa->file_path) {
+                                    $avatar = Storage::url($user->detailMahasiswa->file_path);
+                                } elseif ($user->hasRole('Dosen') && $user->detailDosen && $user->detailDosen->file_path) {
+                                    $avatar = Storage::url($user->detailDosen->file_path);
+                                }
+                            @endphp
+
+                            <img src="{{ $avatar }}"
+                                alt="user-avatar"
+                                style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
                         </div>
                     </div>
 
 
                      <div class="flex-grow-1">
-                        <!-- Menampilkan nama pengguna (first name dan last name) berdasarkan role -->
-                        @if(auth()->user()->hasRole('Mahasiswa'))
-    <!-- Menampilkan Nama Mahasiswa -->
-                            <span class="fw-semibold d-block">
-                                {{ auth()->user()->detailMahasiswa->first_name }} {{ auth()->user()->detailMahasiswa->last_name }}
-                            </span>
-                        @elseif(auth()->user()->hasRole('Dosen'))
-                            <!-- Menampilkan Nama Dosen -->
-                            <span class="fw-semibold d-block">
-                                {{ auth()->user()->detailDosen->first_name }} {{ auth()->user()->detailDosen->last_name }}
-                            </span>
-                        @elseif(auth()->user()->hasRole('superAdmin'))
-                            <!-- Menampilkan nama statis untuk superAdmin -->
-                            <span class="fw-semibold d-block">
-                                Ketua Jurusan
-                            </span>
-                        @endif
+                        @php
+                            $user = auth()->user();
+                            $role = $user->getRoleNames()->first();
+                            $fullName = 'Pengguna';
 
+                            if ($user->hasRole('Mahasiswa') && $user->detailMahasiswa) {
+                                $fullName = $user->detailMahasiswa->first_name . ' ' . $user->detailMahasiswa->last_name;
+                            } elseif ($user->hasRole('Dosen') && $user->detailDosen) {
+                                $fullName = $user->detailDosen->first_name . ' ' . $user->detailDosen->last_name;
+                            } elseif ($user->hasRole('superAdmin')) {
+                                $fullName = 'Ketua Jurusan';
+                            }
+                        @endphp
 
-                        <!-- Menampilkan role pengguna yang sedang login -->
-                        <small class="text-muted">{{ ucfirst(auth()->user()->getRoleNames()->first()) }}</small>
+                        <span class="fw-semibold d-block">{{ $fullName }}</span>
+                        <small class="text-muted">{{ ucfirst($role) }}</small>
                     </div>
+
 
                 </div>
                 </a>

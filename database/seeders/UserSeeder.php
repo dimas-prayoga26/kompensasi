@@ -20,14 +20,12 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Step 1: Buat Role menggunakan Spatie
         $roles = ['superAdmin', 'Dosen', 'Mahasiswa'];
 
         foreach ($roles as $roleName) {
             Role::firstOrCreate(['name' => $roleName]);
         }
 
-        // Step 2: Data user khusus (manual)
         $users = [
             [
                 'email' => 'superadmin@gmail.com',
@@ -38,17 +36,10 @@ class UserSeeder extends Seeder
             ],
             [
                 'email' => 'dosen@gmail.com',
-                'password' => '1234567',
+                'password' => '19700000000000',
                 'nim' => null,
                 'nip' => '19700000000000',
                 'role' => 'Dosen',
-            ],
-            [
-                'email' => 'mahasiswa@gmail.com',
-                'password' => '7654321',
-                'nim' => '7654321',
-                'nip' => null,
-                'role' => 'Mahasiswa',
             ],
         ];
 
@@ -58,7 +49,8 @@ class UserSeeder extends Seeder
                 [
                     'nim' => $data['nim'],
                     'nip' => $data['nip'],
-                    'password' => Hash::make($data['password']),
+                    'password' => bcrypt($data['password']),
+
                 ]
             );
 
@@ -134,28 +126,28 @@ class UserSeeder extends Seeder
         // }
 
         // Seeder dosen
-        for ($i = 1; $i <= 10; $i++) {
-            $nip = '1970' . str_pad($i, 10, '0', STR_PAD_LEFT);
-            $email = "dosen{$i}@mail.com";
+        // for ($i = 1; $i <= 10; $i++) {
+        //     $nip = '1970' . str_pad($i, 10, '0', STR_PAD_LEFT);
+        //     $email = "dosen{$i}@mail.com";
 
-            $user = User::firstOrCreate(
-                ['email' => $email],
-                ['nip' => $nip, 'password' => Hash::make($nip)]
-            );
+        //     $user = User::firstOrCreate(
+        //         ['email' => $email],
+        //         ['nip' => $nip, 'password' => Hash::make($nip)]
+        //     );
 
-            $user->assignRole('Dosen');
+        //     $user->assignRole('Dosen');
 
-            DetailDosen::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'first_name' => "Dosen{$i}",
-                    'last_name' => "Ilmu",
-                    'jenis_kelamin' => rand(0, 1) ? 'Laki-laki' : 'Perempuan',
-                    'jabatan_fungsional' => ['Asisten Ahli', 'Lektor', 'Lektor Kepala', 'Guru Besar'][rand(0, 3)],
-                    'bidang_keahlian' => ['AI', 'Web', 'DB', 'Jaringan'][rand(0, 3)],
-                ]
-            );
-        }
+        //     DetailDosen::firstOrCreate(
+        //         ['user_id' => $user->id],
+        //         [
+        //             'first_name' => "Dosen{$i}",
+        //             'last_name' => "Ilmu",
+        //             'jenis_kelamin' => rand(0, 1) ? 'Laki-laki' : 'Perempuan',
+        //             'jabatan_fungsional' => ['Asisten Ahli', 'Lektor', 'Lektor Kepala', 'Guru Besar'][rand(0, 3)],
+        //             'bidang_keahlian' => ['AI', 'Web', 'DB', 'Jaringan'][rand(0, 3)],
+        //         ]
+        //     );
+        // }
     }
 
 }

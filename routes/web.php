@@ -9,6 +9,7 @@ use App\Http\Controllers\ProdiController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\MataKuliahController;
 use App\Http\Controllers\TugasKompensasiController;
 use App\Http\Controllers\MatakuliahDiampuController;
@@ -20,6 +21,14 @@ Route::get('/login', function () {
     return redirect()->route('mahasiswa.login');
 })->name('login');
 
+Route::get('/forgot-password', function (){
+  return view('auth.forgot-password');
+})->name('password.request');
+
+Route::post('/forgot-password', [ForgotPasswordController::class, 'mailSend'])->name('password.email');
+Route::get('/reset-password/{token}', [ForgotPasswordController::class, 'showResetPasswordForm'])->name('password.reset');
+Route::get('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('password.update');
+Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword'])->name('password.update');
 
 Route::group(["middleware" => ["guest"]], function() {
     // routes/web.php

@@ -36,22 +36,32 @@
                     <h5 class="card-header">Profile Details</h5>
                     <!-- Account -->
                     <div class="card-body">
-                        <div class="d-flex align-items-start align-items-sm-center gap-4">
-                        <!-- Display current profile image -->
-                        <img src="{{ auth()->user()->hasRole('Mahasiswa') 
-                                    ? (auth()->user()->detailMahasiswa->file_path 
-                                        ? Storage::url(auth()->user()->detailMahasiswa->file_path) 
-                                        : 'assets/img/avatars/profile_default.jpg')
-                                    : (auth()->user()->hasRole('Dosen') 
-                                        ? (auth()->user()->detailDosen->file_path 
-                                            ? Storage::url(auth()->user()->detailDosen->file_path) 
-                                            : asset('assets/img/avatars/profile_default.jpg')) 
-                                        : 'assets/img/avatars/profile_default.jpg') }}" 
-                        alt="user-avatar" 
-                        class="d-block rounded" 
-                        height="100" 
-                        width="100" 
-                        id="uploadedAvatar">
+                        @php
+                            $user = auth()->user();
+                            $defaultAvatar = 'assets/img/avatars/profile_default.jpg';
+
+                            if ($user->hasRole('Mahasiswa')) {
+                                $avatarPath = optional($user->detailMahasiswa)->file_path 
+                                            ? Storage::url($user->detailMahasiswa->file_path) 
+                                            : $defaultAvatar;
+                            } elseif ($user->hasRole('Dosen')) {
+                                $avatarPath = optional($user->detailDosen)->file_path 
+                                            ? Storage::url($user->detailDosen->file_path) 
+                                            : $defaultAvatar;
+                            } else {
+                                $avatarPath = $defaultAvatar;
+                            }
+                        @endphp
+
+                        <div class="d-flex align-items-start align-items-sm-center gap-4 mb-2">
+                            <img src="{{ $avatarPath }}" 
+                                alt="user-avatar" 
+                                class="d-block rounded" 
+                                height="100" 
+                                width="100" 
+                                id="uploadedAvatar">
+                        </div>
+
 
                         <div class="button-wrapper">
                             <label for="upload" class="btn btn-primary me-2 mb-4" tabindex="0">
@@ -69,86 +79,89 @@
                     </div>
                     <hr class="my-0" />
                     <div class="card-body">
-                        @csrf
-                        <div class="row">
-                            <div class="mb-3 col-md-6">
-                                <label for="firstName" class="form-label">First Name</label>
-                                @if(auth()->user()->hasRole('Mahasiswa'))
-                                    <input class="form-control" type="text" id="firstName" name="firstName" value="{{ auth()->user()->detailMahasiswa->first_name }}" />
-                                @elseif(auth()->user()->hasRole('Dosen'))
-                                    <input class="form-control" type="text" id="firstName" name="firstName" value="{{ auth()->user()->detailDosen->first_name }}" />
-                                @endif
-                            </div>
-                            <div class="mb-3 col-md-6">
-                                <label for="lastName" class="form-label">Last Name</label>
-                                @if(auth()->user()->hasRole('Mahasiswa'))
-                                    <input class="form-control" type="text" name="lastName" id="lastName" value="{{ auth()->user()->detailMahasiswa->last_name }}" />
-                                @elseif(auth()->user()->hasRole('Dosen'))
-                                    <input class="form-control" type="text" name="lastName" id="lastName" value="{{ auth()->user()->detailDosen->last_name }}" />
-                                @endif
-                            </div>
-
-                            @if(auth()->user()->hasRole('Mahasiswa'))
-                                <div class="mb-3 col-md-6">
-                                    <label for="jenis_kelamin" class="form-label">Jenis Kelamin</label>
-                                    <select class="form-control" name="jenis_kelamin" id="jenis_kelamin">
-                                        <option value="Laki-laki" {{ auth()->user()->detailMahasiswa->jenis_kelamin == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                        <option value="Perempuan" {{ auth()->user()->detailMahasiswa->jenis_kelamin == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
-                                    </select>
-                                </div>
-                            @endif
-
-                            @if(auth()->user()->hasRole('Dosen'))
-                                <div class="mb-3 col-md-6">
-                                    <label for="jenis_kelamin" class="form-label">Jenis Kelamin</label>
-                                    <select class="form-control" name="jenis_kelamin" id="jenis_kelamin">
-                                        <option value="Laki-laki" {{ auth()->user()->detailDosen->jenis_kelamin == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                        <option value="Perempuan" {{ auth()->user()->detailDosen->jenis_kelamin == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
-                                    </select>
-                                </div>
-                            @endif
-
-                            <div class="mb-3 col-md-6">
-                                <label for="email" class="form-label">E-mail</label>
-                                <input class="form-control" type="text" id="email" name="email" value="{{ auth()->user()->email }}" placeholder="john.doe@example.com" disabled/>
-                            </div>
-
-                            @if(auth()->user()->hasRole('Mahasiswa'))
-                                <div class="mb-3 col-md-6">
-                                    <label for="tahun_masuk" class="form-label">Tahun Masuk</label>
-                                    <input class="form-control" type="text" name="tahun_masuk" value="{{ auth()->user()->detailMahasiswa->tahun_masuk }}" disabled />
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="prodi_id" class="form-label">Program Studi</label>
-                                    <input class="form-control" type="text" name="prodi_id" value="{{ auth()->user()->detailMahasiswa->prodi->nama }}" disabled />
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="kelas" class="form-label">Kelas</label>
-                                    <input class="form-control" type="text" name="kelas" value="{{ auth()->user()->detailMahasiswa->kelas }}" disabled />
-                                </div>
-                            @elseif(auth()->user()->hasRole('Dosen'))
-                                <div class="mb-3 col-md-6">
-                                    <label for="jabatan_fungsional" class="form-label">Jabatan Fungsional</label>
-                                    <input class="form-control" type="text" name="jabatan_fungsional" value="{{ auth()->user()->detailDosen->jabatan_fungsional }}" disabled/>
-                                </div>
-                                <div class="mb-3 col-md-6">
-                                    <label for="bidang_keahlian" class="form-label">Bidang Keahlian</label>
-                                    <input class="form-control" type="text" name="bidang_keahlian" value="{{ auth()->user()->detailDosen->bidang_keahlian }}" disabled/>
-                                </div>
-                            @endif
-                        </div>
-                       <div class="mt-2 d-flex align-items-center">
-                            <div>
-                                <button type="submit" class="btn btn-primary me-2">Simpan Perubahan</button>
-                                <button type="reset" class="btn btn-outline-secondary me-2">Batal</button>
-                            </div>
-                            
-                            <button type="button" class="btn btn-warning ms-auto" data-bs-toggle="modal" data-bs-target="#modalUbahPassword">
-                                Ubah Password
-                            </button>
+                    @csrf
+                    <div class="row">
+                        <!-- First Name -->
+                        <div class="mb-3 col-md-6">
+                            <label for="firstName" class="form-label">First Name</label>
+                            <input class="form-control" type="text" id="firstName" name="firstName"
+                                value="{{ auth()->user()->hasRole('Mahasiswa') ? optional(auth()->user()->detailMahasiswa)->first_name : optional(auth()->user()->detailDosen)->first_name }}" />
                         </div>
 
+                        <!-- Last Name -->
+                        <div class="mb-3 col-md-6">
+                            <label for="lastName" class="form-label">Last Name</label>
+                            <input class="form-control" type="text" id="lastName" name="lastName"
+                                value="{{ auth()->user()->hasRole('Mahasiswa') ? optional(auth()->user()->detailMahasiswa)->last_name : optional(auth()->user()->detailDosen)->last_name }}" />
+                        </div>
+
+                        <!-- Jenis Kelamin -->
+                        <div class="mb-3 col-md-6">
+                            <label for="jenis_kelamin" class="form-label">Jenis Kelamin</label>
+                            @php
+                                $jenisKelamin = auth()->user()->hasRole('Mahasiswa') 
+                                    ? optional(auth()->user()->detailMahasiswa)->jenis_kelamin 
+                                    : optional(auth()->user()->detailDosen)->jenis_kelamin;
+                            @endphp
+                            <select class="form-control" name="jenis_kelamin" id="jenis_kelamin">
+                                <option value="Laki-laki" {{ $jenisKelamin == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                <option value="Perempuan" {{ $jenisKelamin == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                            </select>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3 col-md-6">
+                            <label for="email" class="form-label">E-mail</label>
+                            <input class="form-control" type="text" id="email" name="email"
+                                value="{{ auth()->user()->email }}" disabled />
+                        </div>
+
+                        <!-- Mahasiswa -->
+                        @if(auth()->user()->hasRole('Mahasiswa'))
+                            <div class="mb-3 col-md-6">
+                                <label for="tahun_masuk" class="form-label">Tahun Masuk</label>
+                                <input class="form-control" type="text" name="tahun_masuk"
+                                    value="{{ optional(auth()->user()->detailMahasiswa)->tahun_masuk }}" disabled />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="prodi_id" class="form-label">Program Studi</label>
+                                <input class="form-control" type="text" name="prodi_id"
+                                    value="{{ optional(optional(auth()->user()->detailMahasiswa)->prodi)->nama }}" disabled />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="kelas" class="form-label">Kelas</label>
+                                <input class="form-control" type="text" name="kelas"
+                                    value="{{ optional(auth()->user()->detailMahasiswa)->kelas }}" disabled />
+                            </div>
+                        @endif
+
+                        <!-- Dosen -->
+                        @if(auth()->user()->hasRole('Dosen'))
+                            <div class="mb-3 col-md-6">
+                                <label for="jabatan_fungsional" class="form-label">Jabatan Fungsional</label>
+                                <input class="form-control" type="text" name="jabatan_fungsional"
+                                    value="{{ optional(auth()->user()->detailDosen)->jabatan_fungsional }}" />
+                            </div>
+                            <div class="mb-3 col-md-6">
+                                <label for="bidang_keahlian" class="form-label">Bidang Keahlian</label>
+                                <input class="form-control" type="text" name="bidang_keahlian"
+                                    value="{{ optional(auth()->user()->detailDosen)->bidang_keahlian }}" />
+                            </div>
+                        @endif
                     </div>
+
+                    <div class="mt-2 d-flex align-items-center">
+                        <div>
+                            <button type="submit" class="btn btn-primary me-2">Simpan Perubahan</button>
+                            <button type="reset" class="btn btn-outline-secondary me-2">Batal</button>
+                        </div>
+
+                        <button type="button" class="btn btn-warning ms-auto" data-bs-toggle="modal" data-bs-target="#modalUbahPassword">
+                            Ubah Password
+                        </button>
+                    </div>
+                </div>
+
                 </div>
             </form>
         </div>
