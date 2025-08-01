@@ -13,13 +13,14 @@ return new class extends Migration
     {
         Schema::create('matakuliahs', function (Blueprint $table) {
             $table->id();
-            $table->string('kode')->unique(); // misal: BIO101, MAT202
-            $table->string('nama'); // nama matkul, misalnya "Biologi Dasar"
-            $table->integer('sks'); // jumlah SKS
-            $table->text('deskripsi')->nullable(); // opsional
+            $table->string('kode')->nullable()->unique(); // Nullable namun jika ada data harus unik
+            $table->string('nama'); // Nama matkul
+            $table->integer('sks'); // Jumlah SKS
+            $table->text('deskripsi')->nullable(); // Opsional
             $table->foreignId('prodi_id')->constrained('prodis')->onDelete('cascade');
             $table->timestamps();
         });
+
     }
 
     /**

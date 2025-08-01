@@ -81,7 +81,7 @@ class ForgotPasswordController extends Controller
             return back()->withErrors(['email' => 'User tidak ditemukan.']);
         }
 
-        $user->password = bcrypt($request->password); // ✅ Pakai bcrypt
+        $user->password = bcrypt($request->password);
         $user->save();
 
         $resetToken->update([

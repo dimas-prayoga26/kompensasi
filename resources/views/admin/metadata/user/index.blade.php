@@ -234,7 +234,6 @@
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-
     <script>
         window.setTimeout(function() {
             var successAlert = document.getElementById('success-alert');
@@ -380,10 +379,9 @@
                     {
                         targets: 3,
                         render: function (data, type, full, meta) {
-                            console.log(data);  // Untuk debugging
                             
                             if (isDosen) {
-                                return full.detail_dosen?.jabatan ?? '<span class="badge bg-danger">Data belum lengkap</span>';
+                                return full.detail_dosen?.jabatan_fungsional ?? '<span class="badge bg-danger">Data belum lengkap</span>';
                             } else {
                                 const detailMahasiswa = full.detail_mahasiswa;
                                 const kelasSemester = full.kelas_semester_mahasiswas;
@@ -545,12 +543,10 @@
 
                 let modalClosed = false;
 
-                // Event jika modal selesai tertutup
                 function afterModalClosed() {
                     if (modalClosed) return;
                     modalClosed = true;
 
-                    // ⏳ Tampilkan Swal loading
                     Swal.fire({
                         title: 'Mengupload...',
                         text: 'Mohon tunggu, sedang mengimpor data.',
@@ -622,6 +618,9 @@
                     if (response.status === true) {
                         const user = response.data;
 
+                        console.log(user.roles[0].name === 'Dosen');
+                        
+
                         const $modalBody = $('#modalEditData .modal-body');
                         $modalBody.empty();
 
@@ -680,10 +679,15 @@
                                     </select>
                                 </div>
                             `);
-                        } else if (user.nip) {
+                        } else if (user.id   && user.roles[0].name === 'Dosen') {
                             modalTitle = 'Edit Data Dosen';
 
+                            // Tambahkan form input untuk data dosen
                             $modalBody.append(`
+                                <div class="mb-3">
+                                    <label for="nip" class="form-label">NIP</label>
+                                    <input type="text" class="form-control" id="nip" name="nip" value="${user.nip ?? ''}">
+                                </div>
                                 <div class="mb-3">
                                     <label for="first_name" class="form-label">First Name</label>
                                     <input type="text" class="form-control" id="first_name" name="first_name" value="${user.detail_dosen?.first_name ?? ''}">
@@ -709,8 +713,10 @@
                                 </div>
                             `);
                         } else {
+                            // Jika data tidak lengkap atau role tidak dikenali
                             $modalBody.append(`<p>Data tidak lengkap atau role tidak dikenali.</p>`);
                         }
+
 
                         $('#modalEditDataLabel').text(modalTitle);
                         $('#editData').data('id', id);

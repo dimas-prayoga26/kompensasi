@@ -138,7 +138,7 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
 
-            $user = User::with(['detailMahasiswa.prodi', 'detailDosen', 'kelasSemesterMahasiswas'])->find($id);
+            $user = User::with(['roles', 'detailMahasiswa.prodi', 'detailDosen', 'kelasSemesterMahasiswas'])->find($id);
 
             if (!$user) {
                 DB::rollBack();
@@ -176,6 +176,7 @@ class UserController extends Controller
 
             $user = User::findOrFail($id);
 
+            // Jika role user adalah Mahasiswa
             if ($user->hasRole('Mahasiswa')) {
                 $request->validate([
                     'first_name' => 'required|string|max:255',
@@ -206,8 +207,10 @@ class UserController extends Controller
                     ]
                 );
 
+            // Jika role user adalah Dosen
             } elseif ($user->hasRole('Dosen')) {
                 $request->validate([
+                    'nip' => 'required|string|max:20', // Validasi untuk NIP
                     'first_name' => 'required|string|max:255',
                     'last_name' => 'nullable|string|max:255',
                     'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
@@ -220,6 +223,12 @@ class UserController extends Controller
                     throw new \Exception("Detail Dosen tidak ditemukan.");
                 }
 
+                // Update NIP untuk Dosen
+                $user->update([
+                    'nip' => $request->input('nip'), // Update NIP
+                ]);
+
+                // Update detail dosen
                 $detail->update([
                     'first_name' => $request->input('first_name'),
                     'last_name' => $request->input('last_name'),
@@ -247,6 +256,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
 
     public function destroy(string $id)
     {

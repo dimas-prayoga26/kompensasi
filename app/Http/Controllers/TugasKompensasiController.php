@@ -375,7 +375,7 @@ class TugasKompensasiController extends Controller
     public function uploadBukti(Request $request)
     {
         $request->validate([
-            'id' => 'required|exists:penawaran_kompensasi_users,id', // ✅ BENAR
+            'id' => 'required|exists:penawaran_kompensasi_users,id',
             'file_bukti' => 'required|file|max:5120|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx',
             'keterangan' => 'nullable|string|max:1000',
         ]);

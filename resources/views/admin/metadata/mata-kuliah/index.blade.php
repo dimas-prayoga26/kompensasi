@@ -277,6 +277,12 @@
                         }
                     },
                     {
+                        targets: 4, 
+                        render: function (data, type, full, meta) {
+                            return data ? data : '<span class="badge bg-danger">Tidak Ada</span>';
+                        }
+                    },
+                    {
                         targets: 6,
                         render: function (data, type, full, meta) {
                             return `

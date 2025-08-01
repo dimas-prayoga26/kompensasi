@@ -125,29 +125,67 @@ class UserSeeder extends Seeder
         //     }
         // }
 
-        // Seeder dosen
-        // for ($i = 1; $i <= 10; $i++) {
-        //     $nip = '1970' . str_pad($i, 10, '0', STR_PAD_LEFT);
-        //     $email = "dosen{$i}@mail.com";
+        $dosenData = [
+            ['nama' => 'Eka Ismantohadi, S.Kom., M.Eng', 'nip' => '198107092021211005'],
+            ['nama' => 'Iryanto, S.Si., M.Si', 'nip' => '199008012019031014'],
+            ['nama' => 'Willy Permana Putra, S.T., M.Eng', 'nip' => '198610042019031004'],
+            ['nama' => 'A. Lubis Ghozali, S.Kom., M.Kom', 'nip' => '198605102019031011'],
+            ['nama' => 'A. Sumarudin, S.Pd., M.T., M.Sc', 'nip' => null],
+            ['nama' => 'Ir. Adi Suheryadi, S.ST., M.Kom', 'nip' => '199003222019031007'],
+            ['nama' => 'Muhamad Mustamiin, S.Pd.,M.Kom', 'nip' => '199205052019031011'],
+            ['nama' => 'Alifia Puspaningrum, S.Pd., M.Kom', 'nip' => '199305282019032024'],
+            ['nama' => 'Fachrul Pralienka Bani Muhamad, S.ST., M.Kom', 'nip' => '199204232018031001'],
+            ['nama' => 'Kurnia Adi Cahyanto, S.T., M.Kom', 'nip' => '198503022018031001'],
+            ['nama' => 'Dr. Ir. Mohammad Yani, S.T., M.T., M.Sc', 'nip' => '198003072021211006'],
+            ['nama' => 'Esti Mulyani, S.Kom., M.Kom', 'nip' => '199003162018032001'],
+            ['nama' => 'Munengsih Sari Bunga, S.Kom., M.Eng', 'nip' => '198507202019032015'],
+            ['nama' => 'Moh. Ali Fikri, S.Kom., M.Kom', 'nip' => '198901182022031002'],
+            ['nama' => 'Darsih, S.Kom., M.Kom', 'nip' => '198109062021212004'],
+            ['nama' => 'Muhammad Anis Al Hilmi, S.Si., M.T.', 'nip' => '199002282019031012'],
+            ['nama' => 'Nur Budi Nugraha, S.Kom., MT', 'nip' => '198711162022031001'],
+            ['nama' => 'Robieth Sohiburoyyan, S.Si., M.Si', 'nip' => '199005172022031003'],
+            ['nama' => 'Rendi, S,.Kom., M.Kom', 'nip' => '199212132022031007'],
+            ['nama' => 'Yaqutina Marjani Santosa, S.Pd., M.Cs', 'nip' => '199211022022032014'],
+            ['nama' => 'Robi Robiyanto, S.Kom., M.TI', 'nip' => '198707222022031001'],
+            ['nama' => 'Salamet Nur Himawan, S.Si., M.Si', 'nip' => '199407022022031005'],
+            ['nama' => 'Fauzan Ishlakhuddin, S.Kom., M.Cs', 'nip' => '199105222022031003'],
+            ['nama' => 'Dian Pramadhana, S.Kom., M.Kom', 'nip' => '199302282022031007'],
+            ['nama' => 'Riyan Farismana, S.Kom., M.Kom', 'nip' => '198905112022031005'],
+            ['nama' => 'Dita Rizki Amalia, S.Pd., M.Kom', 'nip' => '198803022022032005'],
+            ['nama' => 'Dr. Raswa, M.Pd', 'nip' => null],
+            ['nama' => 'Sonty Lena, S.Kom., M.M., M.Kom', 'nip' => '198703182019032014'],
+            ['nama' => 'Renol Burjulius, S.T., M.Kom', 'nip' => '198407092019031003'],
+            ['nama' => 'Joko Irawan, S.Kom., M.Kom', 'nip' => '199107282024061001'],
+            ['nama' => 'Muhammad Edi Iswanto, M.Kom', 'nip' => '199401302024061002'],
+            ['nama' => 'Vera Wati, M.Kom.', 'nip' => '199409032024062002'],
+        ];
 
-        //     $user = User::firstOrCreate(
-        //         ['email' => $email],
-        //         ['nip' => $nip, 'password' => Hash::make($nip)]
-        //     );
+        foreach ($dosenData as $dosen) {
+            $nameParts = explode(', ', $dosen['nama']);
+            
+            $firstName = explode(' ', $nameParts[0])[0];
+            
+            $lastName = implode(' ', array_slice(explode(' ', $nameParts[0]), 1)) . ', ' . $nameParts[1] ?? '';
 
-        //     $user->assignRole('Dosen');
+            $email = strtolower($firstName . '_' . explode(' ', $lastName)[0]) . '@polindra.co.id'; 
 
-        //     DetailDosen::firstOrCreate(
-        //         ['user_id' => $user->id],
-        //         [
-        //             'first_name' => "Dosen{$i}",
-        //             'last_name' => "Ilmu",
-        //             'jenis_kelamin' => rand(0, 1) ? 'Laki-laki' : 'Perempuan',
-        //             'jabatan_fungsional' => ['Asisten Ahli', 'Lektor', 'Lektor Kepala', 'Guru Besar'][rand(0, 3)],
-        //             'bidang_keahlian' => ['AI', 'Web', 'DB', 'Jaringan'][rand(0, 3)],
-        //         ]
-        //     );
-        // }
+           $user = User::create([
+                'email' => $email,
+                'nip' => $dosen['nip'],
+                'password' => bcrypt($dosen['nip']),
+            ]);
+
+            $user->assignRole('Dosen'); 
+
+            DetailDosen::create([
+                'user_id' => $user->id,
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'jenis_kelamin' => null,
+                'jabatan_fungsional' => null,
+                'bidang_keahlian' => null,
+            ]);
+        }
     }
 
 }
