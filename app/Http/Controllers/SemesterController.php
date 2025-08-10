@@ -37,78 +37,79 @@ class SemesterController extends Controller
             'tahun_ajaran' => 'required|string',
             'semester' => 'required|in:Ganjil,Genap',
         ]);
-
+    
         DB::beginTransaction();
-
+    
         try {
+            // Validasi: pastikan hanya ada satu semester aktif sebelumnya
+            $semesterAktifCount = Semester::where('aktif', true)->count();
+            if ($semesterAktifCount > 1) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Terdapat lebih dari satu semester aktif. Periksa data terlebih dahulu.',
+                ], 422);
+            }
+    
+            // Nonaktifkan semester aktif sebelumnya
             Semester::where('aktif', true)->update(['aktif' => false]);
-
+    
+            // Buat semester baru dan langsung aktif
             $semesterBaru = Semester::create([
                 'tahun_ajaran' => $request->tahun_ajaran,
                 'semester' => $request->semester,
                 'no_semester' => Semester::max('no_semester') + 1,
                 'aktif' => true,
             ]);
-
-            Semester::where('current_aktif', true)->update(['current_aktif' => false]);
-
-            $tahunBaru = $request->tahun_ajaran;
-            $jenisSemester = $request->semester;
-            $tahunPecah = explode('/', $tahunBaru);
-            $tahunSebelum = ((int)$tahunPecah[0] - 1) . '/' . ((int)$tahunPecah[1] - 1);
-
-            if ($jenisSemester === 'Ganjil') {
-                Semester::where('tahun_ajaran', $tahunBaru)
-                    ->where('semester', 'Genap')
-                    ->update(['current_aktif' => true]);
-            } else {
-                Semester::where('tahun_ajaran', $tahunSebelum)
-                    ->where('semester', 'Genap')
-                    ->update(['current_aktif' => true]);
-            }
-
+    
             $semesterIdBaru = $semesterBaru->id;
-
+    
+            // Ambil semua mahasiswa dari semester sebelumnya yang non-aktif (artinya semester sebelumnya)
             $mahasiswaList = KelasSemesterMahasiswa::whereHas('semester', function ($query) {
                 $query->where('aktif', false);
             })->get();
-
+    
             foreach ($mahasiswaList as $item) {
                 $semesterLokalBaru = $item->semester_lokal + 1;
-
+    
                 $detail = DetailMahasiswa::where('user_id', $item->user_id)->first();
                 $prodi = $detail?->prodi;
-
+    
                 if (!$prodi) continue;
-
+    
                 $maxSemester = $prodi->lama_studi ?? 8;
-
+    
+                // Jika sudah melebihi lama studi, nonaktifkan mahasiswa
                 if ($semesterLokalBaru > $maxSemester) {
                     $item->update(['is_active' => false]);
                     continue;
                 }
-
+    
+                // Nonaktifkan kompensasi aktif
                 Kompensasi::where('user_id', $item->user_id)
-                ->where('is_active', true)
-                ->update(['is_active' => false]);
-
+                    ->where('is_active', true)
+                    ->update(['is_active' => false]);
+    
+                // Proses pemindahan kelas jika semester baru adalah "Ganjil"
                 $kelasLama = Kelas::find($item->kelas_id);
                 $kelasBaruId = $item->kelas_id;
-
+    
                 if ($semesterBaru->semester === 'Ganjil' && $kelasLama && preg_match('/^(TI|RPL)(\d)([A-Z])$/', $kelasLama->nama, $matches)) {
-                    $prefix = $matches[1];
-                    $tingkat = (int)$matches[2] + 1;
-                    $huruf = $matches[3];
+                    $prefix = $matches[1]; // TI / RPL
+                    $tingkat = (int)$matches[2] + 1; // naik tingkat
+                    $huruf = $matches[3]; // A / B / dst
                     $kelasBaruNama = $prefix . $tingkat . $huruf;
-
+    
                     $kelasBaru = Kelas::where('nama', $kelasBaruNama)->first();
                     if ($kelasBaru) {
                         $kelasBaruId = $kelasBaru->id;
+    
+                        // Update nama kelas di detail mahasiswa
                         DetailMahasiswa::where('user_id', $item->user_id)
                             ->update(['kelas' => $kelasBaru->nama]);
                     }
                 }
-
+    
+                // Update data semester mahasiswa
                 $item->update([
                     'semester_id' => $semesterIdBaru,
                     'semester_lokal' => $semesterLokalBaru,
@@ -116,16 +117,16 @@ class SemesterController extends Controller
                     'is_active' => true,
                 ]);
             }
-
+    
             DB::commit();
-
+    
             return response()->json([
                 'status' => true,
                 'message' => 'Semester baru berhasil ditambahkan dan data mahasiswa diperbarui.',
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
-
+    
             return response()->json([
                 'status' => false,
                 'message' => 'Gagal menambahkan semester baru.',

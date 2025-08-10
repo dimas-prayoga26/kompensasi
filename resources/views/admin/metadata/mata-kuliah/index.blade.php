@@ -17,7 +17,9 @@
 
 <div class="container-xxl flex-grow-1 container-p-y">
 
-    <h4 class="fw-bold py-3 mb-4"><span class="text-muted fw-light">Dashboard</h4>
+    <h4 class="fw-bold py-3 mb-4">
+        <span class="text-muted fw-light">Settings /</span> Matakuliah
+    </h4>
 
         @if (session('success'))
             <div id="success-alert" class="alert alert-success alert-dismissible fade show" role="alert">
@@ -39,7 +41,7 @@
       <div class="col-lg-12 mb-4 order-0">
           <div class="card">
             <div class="d-flex justify-content-between align-items-center p-3">
-                  <h5 class="mb-0">Daftar Data Kelas</h5>
+                  <h5 class="mb-0">Daftar Data Matakuliah</h5>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahData">
                         + Tambah Data
                     </button>
@@ -289,12 +291,15 @@
                                 <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
                                     <i class="fe fe-edit"></i> Edit
                                 </button>
+                                <!--
                                 <button type="button" class="btn btn-danger btn-sm" onclick="hapusData(${full.id})">
                                     <i class="fe fe-trash"></i> Hapus
                                 </button>
+                                -->
                             `;
                         }
                     }
+
 
                 ],
                 columns: [

@@ -17,7 +17,6 @@ class SemesterSeeder extends Seeder
             [
                 'no_semester'   => 1,
                 'aktif'         => true,
-                'current_aktif' => true,
             ]
         );
     }

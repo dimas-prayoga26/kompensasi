@@ -172,12 +172,15 @@
                                 <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
                                     <i class="fe fe-edit"></i> Edit
                                 </button>
+                                <!--
                                 <button type="button" class="btn btn-danger btn-sm" onclick="hapusData(${full.id})">
                                     <i class="fe fe-trash"></i> Hapus
                                 </button>
+                                -->
                             `;
                         }
                     }
+
 
                 ],
                 columns: [

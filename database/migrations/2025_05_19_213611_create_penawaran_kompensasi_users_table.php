@@ -17,8 +17,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('file_path');
             $table->text('keterangan')->nullable();
+            $table->enum('status', ['pending', 'reject', 'accept'])->nullable()->default('pending'); // null + default
             $table->timestamps();
         });
+
     }
 
     /**

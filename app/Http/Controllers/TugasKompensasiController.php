@@ -24,7 +24,9 @@ class TugasKompensasiController extends Controller
             ->with('detailDosen:id,user_id,first_name,last_name')
             ->get();
 
-        return view('admin.tugas_kompen.index', compact('dosens'));
+        $tugasKompensasis = TugasKompensasi::select('id', 'status')->get();
+
+        return view('admin.tugas_kompen.index', compact('tugasKompensasis', 'dosens'));
     }
     
     public function create()
@@ -287,37 +289,57 @@ class TugasKompensasiController extends Controller
 
     public function detail($id)
     {
-        $data = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $id)
+        $rows = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $id)
             ->with(['user.detailMahasiswa'])
             ->get()
             ->map(function ($item) {
                 $detail = $item->user->detailMahasiswa;
 
                 return [
-                    'id' => $item->id,
-                    'nim' => $item->user->nim,
+                    'id'    => $item->id,
+                    'nim'   => $item->user->nim,
                     'nama_mahasiswa' => $detail ? "{$detail->first_name} {$detail->last_name}" : '-',
                     'kelas' => $detail->kelas ?? '-',
+
+                    'status' => $item->status ?? 'pending',
+
+                    'bukti_konfirmasi_url' => $item->file_path
+                        ? Storage::disk('public')->url($item->file_path)
+                        : null,
                 ];
             });
 
-        return DataTables::of($data)->make(true);
+        return DataTables::of($rows)->make(true);
     }
 
-    public function hapusMahasiswa($id)
+    public function rejectMahasiswa($id)
     {
         try {
+            DB::beginTransaction();
+
             $mahasiswa = PenawaranKompensasiUser::findOrFail($id);
-            $mahasiswa->delete();
+
+            if ($mahasiswa->status === 'reject') {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Mahasiswa sudah berstatus reject.'
+                ], 400);
+            }
+
+            $mahasiswa->status = 'reject';
+            $mahasiswa->save();
+
+            DB::commit();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Mahasiswa berhasil dihapus dari kompensasi.'
+                'message' => 'Status mahasiswa berhasil diubah menjadi reject.'
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'status' => false,
-                'message' => 'Gagal menghapus mahasiswa: ' . $e->getMessage()
+                'message' => 'Gagal mengubah status mahasiswa: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -325,16 +347,15 @@ class TugasKompensasiController extends Controller
     public function storeMahasiswaKompensasi(Request $request)
     {
         $request->validate([
-            'kompensasi_id' => 'required|exists:penawaran_kompensasis,id'
+            'kompensasi_id' => 'required|exists:penawaran_kompensasis,id',
         ]);
-
 
         try {
             $userId = Auth::id();
 
             $exists = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $request->kompensasi_id)
-                        ->where('user_id', $userId)
-                        ->exists();
+                ->where('user_id', $userId)
+                ->exists();
 
             if ($exists) {
                 return response()->json([
@@ -343,33 +364,29 @@ class TugasKompensasiController extends Controller
                 ], 400);
             }
 
-            $penawaran = TugasKompensasi::findOrFail($request->kompensasi_id);
-
-            $totalTerdaftar = PenawaranKompensasiUser::where('penawaran_kompensasi_id', $request->kompensasi_id)->count();
-
-            if ($totalTerdaftar >= $penawaran->jumlah_mahasiswa) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Kuota mahasiswa untuk kompensasi ini sudah penuh.'
-                ], 400);
-            }
+            DB::beginTransaction();
 
             PenawaranKompensasiUser::create([
                 'penawaran_kompensasi_id' => $request->kompensasi_id,
-                'user_id' => $userId
+                'user_id' => $userId,
+                // 'status' => 'pending' // kalau perlu default status
             ]);
+
+            DB::commit();
 
             return response()->json([
                 'status' => true,
                 'message' => 'Berhasil mendaftar ke kompensasi.'
             ]);
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'status' => false,
                 'message' => 'Gagal menyimpan data: ' . $e->getMessage()
             ], 500);
         }
     }
+
 
 
     public function uploadBukti(Request $request)

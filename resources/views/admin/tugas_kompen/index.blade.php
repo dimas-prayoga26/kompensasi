@@ -10,6 +10,11 @@
     div.dataTables_filter {
         margin-bottom: 2rem;
     }
+
+    .accordion .accordion-item {
+        border: 1px solid #dee2e6;
+    }
+
 </style>
 
 
@@ -44,16 +49,18 @@
                 <h5 class="mb-0">Daftar Data Tugas Kompensasi</h5>
 
                 <div class="d-flex gap-2">
-                    @role('superAdmin|Dosen')
+                    @role('Mahasiswa')
                         <a href="{{ asset('template_kompen/BUKTI_KOMPENSASI.docx') }}" class="btn btn-outline-secondary" download>
                             <i class="bx bx-download"></i> Download Template
                         </a>
+                    @endrole
 
+                    @role('superAdmin|Dosen')
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahData">
                             + Tambah Data
                         </button>
-
                     @endrole
+
                 </div>
             </div>
               <div class="d-flex align-items-end row">
@@ -68,6 +75,7 @@
                                       <th>Jumlah mahasiswa dibutuhkan</th>
                                       <th>Jumlah menit kompensasi</th>
                                       <th>Deskripsi Kompen</th>
+                                      <th>Status</th>
                                       <th>Aksi</th>
                                   </tr>
                               </thead>
@@ -214,9 +222,15 @@
     <div class="modal fade" id="modalDetailData" tabindex="-1" aria-labelledby="modalDetailDataLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl"> <!-- Besar karena isinya tabel -->
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detail Mahasiswa Kompensasi</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                <div class="modal-header d-flex justify-content-between align-items-center">
+                    <h5 class="modal-title d-flex align-items-center">
+                        Detail Mahasiswa Kompensasi
+                        <span id="statusBadge" class="badge ms-3"></span> <!-- Badge status -->
+                    </h5>
+                    <div>
+                        <button id="btnToggleStatus" type="button" class="btn btn-sm"></button>
+                        <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
                 </div>
                 <div class="modal-body">
                     <table class="table table-bordered" id="detailDatatable" width="100%">
@@ -235,6 +249,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- Modal Upload Bukti -->
     <div class="modal fade" id="modalUploadBukti" tabindex="-1" aria-labelledby="modalUploadBuktiLabel" aria-hidden="true">
@@ -277,7 +292,65 @@
         </div>
     </div>
 
+    <!-- Modal Detail -->
+    <div class="modal fade" id="modalDetailBuktiKompenPekerjaan" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+            
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDetailLabel">Detail Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="accordion" id="accordionExample">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                Accordion Item #1
+                            </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <strong>This is the first item's accordion body.</strong> It is shown by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+                            </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                Accordion Item #2
+                            </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+                            </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                Accordion Item #3
+                            </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                <strong>This is the third item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
+                            </div>
+                            </div>
+                        </div>
+                        </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="showModalUploadBukti()">Balas</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
 
+            </div>
+        </div>
+    </div>
 
 </div>
 
@@ -309,6 +382,7 @@
         }, 5000);
 
         var table;
+        let reopenDetailAfterUpload = true;
 
         $(document).ready(function () {
             const currentUserRole = "{{ auth()->user()->getRoleNames()->first() }}";
@@ -321,6 +395,7 @@
                 { data: 'jumlah_mahasiswa' },
                 { data: 'jumlah_menit_kompensasi' },
                 { data: 'deskripsi_kompensasi' },
+                { data: 'status' },
             ];
 
             if (currentUserRole != 'Mahasiswa') {
@@ -377,7 +452,7 @@
                     {
                         targets: 3,
                         render: function (data, type, full, meta) {
-                            return full.jumlah_mahasiswa || '-';
+                            return full.jumlah_mahasiswa;
                         }
                     },
                     {
@@ -395,46 +470,97 @@
                     {
                         targets: 6,
                         render: function (data, type, full, meta) {
+                            let badge = '';
+
+                            if (full.jumlah_mahasiswa === 0) {
+                                badge = `<span class="badge bg-danger">Closed</span>`;
+                            } else if (full.status === 'open') {
+                                badge = `<span class="badge bg-success">Open</span>`;
+                            } else if (full.status === 'closed') {
+                                badge = `<span class="badge bg-danger">Closed</span>`;
+                            } else {
+                                badge = `<span class="badge bg-secondary">-</span>`;
+                            }
+
+                            return badge;
+                        }
+                    },
+                    {
+                        targets: 7,
+                        render: function (data, type, full, meta) {
                             const currentUserId = parseInt(currentUserID);
-                            const userSudahTerdaftar = full.penawaran_users?.some(pu => parseInt(pu.user_id) === currentUserId);
+
+                            const myPU = (full.penawaran_users || []).find(pu => parseInt(pu.user_id) === currentUserId);
+
+                            const userSudahTerdaftar = !!myPU;
+
+                            const status = (myPU?.status);
+                            const filePath = myPU?.file_path || null;
+                            const kuotaHabis = Number(full.jumlah_mahasiswa) <= 0;
+
+                            console.log(kuotaHabis);
+                            
 
                             if (currentUserRole === 'Mahasiswa') {
-                                let html = '';
+                            let html = '';
 
-                                if (!userSudahTerdaftar) {
+                            if (!userSudahTerdaftar) {
+                                if (kuotaHabis) {
+                                    html += `<span class="badge bg-danger">Kuota Penuh</span>`;
+                                } else {
                                     html += `
                                         <button type="button" class="btn btn-success btn-sm" onclick="pilihData(${full.id})">
-                                            <i class="fe fe-check"></i> Pilih
+                                        <i class="fe fe-check"></i> Pilih
                                         </button>
                                     `;
                                 }
-
-                                if (userSudahTerdaftar) {
+                            } else {
+                                if (status === 'pending') {
+                                    html += `<span class="badge bg-info">Mohon Tunggu</span>`;
+                                } 
+                                else if (status === 'accept') {
                                     html += `
-                                        <button type="button" class="btn btn-primary btn-sm" onclick="downloadBukti(${full.id})">
-                                            <i class="fe fe-download"></i> Download Bukti
+                                    <button type="button" class="btn btn-info btn-sm" onclick="detailDataBuktiKompenPekerjaan(${full.id})">
+                                        <i class="fe fe-eye"></i> Detail
+                                    </button>
+                                    `;
+
+                                    if (!filePath) {
+                                    html += `
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="uploadBuktiKonfirmasi(${myPU.id})">
+                                        <i class="fe fe-upload"></i> Upload Bukti Konfirmasi
                                         </button>
                                     `;
+                                    } else {
+                                    html += `
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="downloadBukti('${myPU.id}')">
+                                        <i class="fe fe-download"></i> Download Bukti
+                                        </button>
+                                    `;
+                                    }
+                                } 
+                                else if (status === 'reject') {
+                                    html += `<span class="badge bg-danger">Ditolak</span>`;
                                 }
+                            }
 
-                                return html;
+                            return html;
+
                             } else {
                                 return `
                                     <button type="button" class="btn btn-info btn-sm" onclick="detailData(${full.id})">
-                                        <i class="fe fe-eye"></i> Detail
+                                    <i class="fe fe-eye"></i> Detail
                                     </button>
                                     <button type="button" class="btn btn-warning btn-sm" onclick="editData(${full.id})">
-                                        <i class="fe fe-edit"></i> Edit
+                                    <i class="fe fe-edit"></i> Edit
                                     </button>
                                     <button type="button" class="btn btn-danger btn-sm" onclick="hapusData(${full.id})">
-                                        <i class="fe fe-trash"></i> Hapus
+                                    <i class="fe fe-trash"></i> Hapus
                                     </button>
                                 `;
                             }
                         }
                     }
-
-
                 ],
                 columns: columnsConfig,
                 language: {
@@ -444,28 +570,75 @@
             });
         });
 
-        function downloadBukti(id) {
-            const url = "{{ route('tugas-kompensasi.download.bukti', ['id' => ':id']) }}".replace(':id', id);
+        function detailDataBuktiKompenPekerjaan(id) {
+            $('#modalDetailBuktiKompenPekerjaan').modal('show');
+        }
+
+        function showModalUploadBukti() {
+            const detailEl = document.getElementById('modalDetailBuktiKompenPekerjaan');
+            const uploadEl = document.getElementById('modalUploadBukti');
+
+            const detail = bootstrap.Modal.getOrCreateInstance(detailEl);
+            const upload = bootstrap.Modal.getOrCreateInstance(uploadEl);
+            detailEl.addEventListener('hidden.bs.modal', function handler() {
+            upload.show();
+            detailEl.removeEventListener('hidden.bs.modal', handler);
+            }, { once: true });
+
+            uploadEl.addEventListener('hidden.bs.modal', function handler() {
+            if (reopenDetailAfterUpload) {
+                detail.show();
+            }
+            uploadEl.removeEventListener('hidden.bs.modal', handler);
+            }, { once: true });
+
+            detail.hide();
+        }
+
+        function onUploadSuccess() {
+            reopenDetailAfterUpload = false;
+            bootstrap.Modal.getInstance(document.getElementById('modalUploadBukti')).hide();
+        }
+
+
+
+        function uploadBuktiRoleMahasiswa(id) {
+            $('#uploadBuktiId').val(id);
+
+            // Reset form
+            $('#file_bukti').val('');
+            $('#keterangan').val('');
+            $('#preview_upload_image').addClass('d-none').attr('src', '#');
+            $('#preview_upload_file').addClass('d-none').html('');
 
             $.ajax({
-                url: url,
-                method: 'GET',
-                success: function(response) {
-                    if (response.status && response.file_url) {
-                        const link = document.createElement('a');
-                        link.href = response.file_url;
-                        link.setAttribute('download', ''); // Memaksa browser untuk download
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    } else {
-                        Swal.fire('Gagal', response.message || 'File tidak ditemukan.', 'error');
+                url: `/portal/tugas-kompensasi/${id}/get-upload-mahasiswa`,
+                type: 'GET',
+                success: function (res) {
+                    if (res.success) {
+                        const fileUrl = res.data.file_url;
+                        const fileExt = fileUrl.split('.').pop().toLowerCase();
+                        const keterangan = res.data.keterangan || '';
+
+                        $('#keterangan').val(keterangan);
+
+                        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
+                            $('#preview_upload_image').attr('src', fileUrl).removeClass('d-none');
+                            $('#preview_upload_file').addClass('d-none').html('');
+                        } else {
+                            $('#preview_upload_file').removeClass('d-none').html(
+                                `<a href="${fileUrl}" target="_blank" class="text-primary">Lihat dokumen sebelumnya</a>`
+                            );
+                            $('#preview_upload_image').addClass('d-none').attr('src', '#');
+                        }
                     }
                 },
-                error: function(xhr) {
-                    Swal.fire('Error', xhr.responseJSON?.message || 'Terjadi kesalahan saat mengambil bukti.', 'error');
+                error: function () {
+                    console.warn('Tidak ada data upload sebelumnya atau gagal mengambil data.');
                 }
             });
+
+            $('#modalUploadBukti').modal('show');
         }
 
         function showImagePreview(url) {
@@ -484,38 +657,55 @@
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: `/portal/tugas-kompensasi/${id}/detail`,
-                    type: 'GET'
+                url: `/portal/tugas-kompensasi/${id}/detail`,
+                type: 'GET'
                 },
                 columns: [
-                    { data: null, name: 'no', render: (data, type, row, meta) => meta.row + 1 },
-                    { data: 'nim', name: 'nim' },
-                    { data: 'nama_mahasiswa', name: 'nama_mahasiswa' },
-                    { data: 'kelas', name: 'kelas' },
-                    {
-                        data: 'id',
-                        name: 'id',
-                        render: function (data, type, row, full) {
-                            console.log(data);
-                            
-                            return `
-                                <div class="d-flex gap-1">
-                                    <button class="btn btn-danger btn-sm" onclick="hapusMahasiswa(${data})">
-                                        <i class="fe fe-trash"></i> Hapus
-                                    </button>
-                                    <button class="btn btn-success btn-sm" onclick="uploadBukti(${data})">
-                                        <i class="fe fe-upload"></i> Upload Bukti
-                                    </button>
-                                </div>
-                            `;
-                        }
+                { data: null, name: 'no', render: (d, t, r, m) => m.row + 1 },
+                { data: 'nim', name: 'nim' },
+                { data: 'nama_mahasiswa', name: 'nama_mahasiswa' },
+                { data: 'kelas', name: 'kelas' },
+                {
+                    data: 'id',
+                    name: 'aksi',
+                    orderable: false,
+                    searchable: false,
+                    render: function (data, type, full) {
+                    const status = (full.status || 'pending').toLowerCase();
+                    const urlBukti = full.bukti_konfirmasi_url;
+                    let html = `<div class="d-flex gap-1 flex-wrap">`;
+
+                    if (status === 'pending') {
+                        html += `
+                        <button class="btn btn-success btn-sm" onclick="terimaMahasiswa(${data})">
+                            <i class="fe fe-check"></i> Terima
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="tolakMahasiswa(${data})">
+                            <i class="fe fe-x"></i> Tolak
+                        </button>
+                        `;
+                    } else if (status === 'accept') {
+                        html += `
+                        <button class="btn btn-primary btn-sm" onclick="uploadBuktiKonfirmasi(${data})">
+                            <i class="fe fe-upload"></i> Upload Bukti Konfirmasi
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" ${urlBukti ? `onclick="downloadBukti('${urlBukti}')"` : 'disabled'}>
+                            <i class="fe fe-download"></i> Download Bukti
+                        </button>
+                        `;
+                    } else if (status === 'reject') {
+                        html += `<span class="badge bg-danger">Ditolak</span>`;
                     }
+
+                    html += `</div>`;
+                    return html;
+                    }
+                }
                 ]
             });
         }
 
-
-        function uploadBukti(id) {
+        function uploadBuktiDosen(id) {
             $('#uploadBuktiId').val(id);
 
             // Reset form
@@ -525,7 +715,7 @@
             $('#preview_upload_file').addClass('d-none').html('');
 
             $.ajax({
-                url: `/portal/tugas-kompensasi/${id}/get-upload`,
+                url: `/portal/tugas-kompensasi/${id}/get-upload-dosen`,
                 type: 'GET',
                 success: function (res) {
                     if (res.success) {
@@ -584,15 +774,11 @@
             const modalEl = document.getElementById('modalUploadBukti');
             const modalInstance = bootstrap.Modal.getInstance(modalEl);
 
-            // Tutup modal Upload Bukti
             modalInstance.hide();
 
-            // Jalankan setelah modal benar-benar tertutup
             $(modalEl).one('hidden.bs.modal', function () {
-                // Tutup semua modal aktif untuk mencegah tumpang tindih
                 $('.modal.show').modal('hide');
 
-                // Tampilkan loading
                 Swal.fire({
                     title: 'Mengunggah...',
                     text: 'Mohon tunggu sebentar.',
@@ -600,7 +786,6 @@
                     didOpen: () => Swal.showLoading()
                 });
 
-                // Kirim data via AJAX
                 $.ajax({
                     url: "{{ route('tugas-kompensasi.upload.bukti') }}",
                     type: "POST",
@@ -647,17 +832,17 @@
         });
 
 
-        function hapusMahasiswa(id) {
+        function tolakMahasiswa(id) {
             $('#modalDetailData').modal('hide');
 
             setTimeout(() => {
                 Swal.fire({
-                    title: 'Yakin ingin menghapus?',
-                    text: 'Data mahasiswa akan dihapus dari program kompensasi ini.',
+                    title: 'Apakah anda yakin?',
+                    text: 'Mahasiswa yang sudah di tolak tidak bisa mendaftar tugas kompensasi ini lagi.',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal',
+                    confirmButtonText: 'Ya!',
+                    cancelButtonText: 'Tidak',
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -755,7 +940,6 @@
             });
         }
 
-
         $("#simpanData").on("click", function (e) {
             e.preventDefault();
 
@@ -831,8 +1015,6 @@
             });
         });
 
-
-
         const urlEditTugasKompensasi = "{{ route('tugas-kompensasi.show', ':id') }}";
 
         function editData(id) {
@@ -898,8 +1080,6 @@
                 }
             });
         }
-
-
 
         $("#updateData").on("click", function(e) {
             e.preventDefault();

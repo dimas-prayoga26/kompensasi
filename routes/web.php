@@ -100,8 +100,9 @@ Route::middleware(['web', 'auth'])->group(function () {
 
         Route::get("/tugas-kompensasi/datatable", [TugasKompensasiController::class, "datatable"])->name("tugas-kompensasi.datatable");
         Route::get('/tugas-kompensasi/{id}/detail', [TugasKompensasiController::class, 'detail']);
-        Route::delete('/tugas-kompensasi/detail/{id}', [TugasKompensasiController::class, 'hapusMahasiswa'])->name('tugas-kompensasi.detail.destroy');
-        Route::get('/tugas-kompensasi/{id}/get-upload', [TugasKompensasiController::class, 'getUploadData']);
+        Route::delete('/tugas-kompensasi/detail/{id}', [TugasKompensasiController::class, 'rejectMahasiswa'])->name('tugas-kompensasi.detail.reject');
+        Route::get('/tugas-kompensasi/{id}/get-upload-mahasiswa', [TugasKompensasiController::class, 'getUploadData']);
+        Route::get('/tugas-kompensasi/{id}/get-upload-dosen', [TugasKompensasiController::class, 'getUploadData']);
         Route::post('/tugas-kompensasi/pilih', [TugasKompensasiController::class, 'storeMahasiswaKompensasi'])->middleware('auth');
         Route::post('/tugas-kompensasi/upload-bukti', [TugasKompensasiController::class, 'uploadBukti'])->name('tugas-kompensasi.upload.bukti');
         Route::get('/tugas-kompensasi/bukti/{id}', [TugasKompensasiController::class, 'downloadBukti'])->name('tugas-kompensasi.download.bukti');

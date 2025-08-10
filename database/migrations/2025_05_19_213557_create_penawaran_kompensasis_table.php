@@ -18,10 +18,11 @@ return new class extends Migration
             $table->string('file_path');
             $table->integer('jumlah_mahasiswa')->default(1);
             $table->integer('jumlah_menit_kompensasi');
-
+            $table->enum('status', ['open', 'closed'])->default('open');
             $table->timestamps();
         });
     }
+
 
     /**
      * Reverse the migrations.

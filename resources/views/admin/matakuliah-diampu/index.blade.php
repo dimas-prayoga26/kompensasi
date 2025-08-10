@@ -369,7 +369,7 @@
                     }
                 },
                 {
-                targets: 6,
+                    targets: 6,
                     render: function (data, type, full, meta) {
                         let isSemesterValid = false;
 
@@ -396,14 +396,16 @@
                                 <button type="button" class="btn btn-warning btn-sm ${disableClass}" onclick="hapusData(${full.id})">
                                     <i class="fe fe-trash"></i> Hapus list kompen mahasiswa
                                 </button>
+                                <!--
                                 <button type="button" class="btn btn-danger btn-sm" onclick="hapusDataPengampu(${full.id})">
                                     <i class="fe fe-trash"></i> Hapus data matakuliah yang diampu
                                 </button>
+                                -->
                             </div>
                         `;
                     }
-
                 }
+
 
             ],
             columns: [
