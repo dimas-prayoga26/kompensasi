@@ -53,8 +53,8 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::post("/logout", [DashboardController::class, "authLogout"])->name("auth.logout");
 
         Route::get("/mahasiswa/dashboard/datatable", [DashboardController::class, "mahasiswaDashboardDatatable"])->name("mahasiswa.dashboard.datatable");
-        Route::get('/admin/dashboard/datatable', [DashboardController::class, 'adminDashboardDatatable'])->name('admin.dashboard.datatable');
-        Route::get('/admin/export-kompen', [DashboardController::class, 'exportKompensasi'])->name('admin.dashboard.export-kompen');
+        Route::get('/dashboard/datatable', [DashboardController::class, 'adminDashboardDatatable'])->name('admin.dashboard.datatable');
+        Route::get('/export-kompen', [DashboardController::class, 'exportKompensasi'])->name('admin.dashboard.export-kompen');
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -99,13 +99,14 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::resource('matakuliah-diampu', MatakuliahDiampuController::class);
 
         Route::get("/tugas-kompensasi/datatable", [TugasKompensasiController::class, "datatable"])->name("tugas-kompensasi.datatable");
-        Route::get('/tugas-kompensasi/{id}/detail', [TugasKompensasiController::class, 'detail']);
-        Route::delete('/tugas-kompensasi/detail/{id}', [TugasKompensasiController::class, 'rejectMahasiswa'])->name('tugas-kompensasi.detail.reject');
-        Route::get('/tugas-kompensasi/{id}/get-upload-mahasiswa', [TugasKompensasiController::class, 'getUploadData']);
-        Route::get('/tugas-kompensasi/{id}/get-upload-dosen', [TugasKompensasiController::class, 'getUploadData']);
         Route::post('/tugas-kompensasi/pilih', [TugasKompensasiController::class, 'storeMahasiswaKompensasi'])->middleware('auth');
-        Route::post('/tugas-kompensasi/upload-bukti', [TugasKompensasiController::class, 'uploadBukti'])->name('tugas-kompensasi.upload.bukti');
-        Route::get('/tugas-kompensasi/bukti/{id}', [TugasKompensasiController::class, 'downloadBukti'])->name('tugas-kompensasi.download.bukti');
+        Route::post('/tugas-kompensasi/{id}/upload-bukti', [TugasKompensasiController::class, 'uploadBukti'])->name('tugas-kompensasi.upload.bukti');
+        Route::get('/tugas-kompensasi/{id}/download-bukti', [TugasKompensasiController::class, 'downloadBukti'])->name('tugas-kompensasi.download.bukti');
+        Route::get('/tugas-kompensasi/{id}/files', [TugasKompensasiController::class, 'getFiles'])->name('tugas-kompensasi.files');
+        Route::get('/tugas-kompensasi/{id}/detail', [TugasKompensasiController::class, 'detail']);
+        Route::post('/tugas-kompensasi/{id}/detail/konfirmasi-kompensasi', [TugasKompensasiController::class, 'konfirmasiKompensasi'])->name('tugas-kompensasi.konfirmasi');
+        Route::post('/tugas-kompensasi/{id}/detail/reject', [TugasKompensasiController::class, 'rejectMahasiswa'])->name('tugas-kompensasi.detail.reject');
+        Route::post('/tugas-kompensasi/{id}/detail/accept', [TugasKompensasiController::class, 'acceptMahasiswa'])->name('tugas-kompensasi.detail.accept');
         Route::resource('tugas-kompensasi', TugasKompensasiController::class);
     });
 });

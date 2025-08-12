@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('file_bukti_penawaran_kompensasis', function (Blueprint $table) {
             $table->id();
             $table->foreignId('penawaran_kompensasi_id')->constrained('penawaran_kompensasis')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('file_path');
-            $table->text('keterangan')->nullable(); // deskripsi singkat
+            $table->text('keterangan')->nullable();
             $table->timestamps();
         });
     }

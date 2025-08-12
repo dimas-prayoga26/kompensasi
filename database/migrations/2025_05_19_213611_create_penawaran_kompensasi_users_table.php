@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('file_path');
             $table->text('keterangan')->nullable();
             $table->enum('status', ['pending', 'reject', 'accept'])->nullable()->default('pending'); // null + default
+            $table->enum('file_status', ['created', 'edited'])->nullable()->default(null);
             $table->timestamps();
         });
 

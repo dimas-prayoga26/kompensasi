@@ -16,4 +16,9 @@ class FileBuktiKompensasi extends Model
     {
         return $this->belongsTo(TugasKompensasi::class, 'penawaran_kompensasi_id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -225,10 +225,14 @@
                 <div class="modal-header d-flex justify-content-between align-items-center">
                     <h5 class="modal-title d-flex align-items-center">
                         Detail Mahasiswa Kompensasi
-                        <span id="statusBadge" class="badge ms-3"></span> <!-- Badge status -->
+                        <button type="button" class="btn btn-success ms-3" id="btnKonfirmasi">
+                            Konfirmasi
+                        </button>
                     </h5>
                     <div>
-                        <button id="btnToggleStatus" type="button" class="btn btn-sm"></button>
+                        <!-- Button Konfirmasi -->
+
+                        <!-- Close Button -->
                         <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                 </div>
@@ -251,17 +255,24 @@
     </div>
 
 
+
     <!-- Modal Upload Bukti -->
     <div class="modal fade" id="modalUploadBukti" tabindex="-1" aria-labelledby="modalUploadBuktiLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form id="formUploadBukti" enctype="multipart/form-data">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="modalUploadBuktiLabel">Upload Bukti Tugas Kompensasi</h5>
+                        <h5 class="modal-title" id="modalUploadBuktiLabel">
+                            Upload Bukti Tugas Kompensasi
+                            @if(auth()->user()->hasRole('Mahasiswa'))
+                                <span id="statusBadge" class="badge bg-secondary ms-2">Status</span>
+                            @endif
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" name="id" id="uploadBuktiId">
+                        <input type="hidden" id="uploadBuktiId" name="id">
+                        <input type="hidden" id="uploadTarget" name="target">
 
                         <div class="mb-3">
                             <label for="file_bukti" class="form-label">Pilih File Bukti</label>
@@ -296,61 +307,25 @@
     <div class="modal fade" id="modalDetailBuktiKompenPekerjaan" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-            
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalDetailLabel">Detail Data</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                
-                <div class="modal-body">
-                    <div class="accordion" id="accordionExample">
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                                Accordion Item #1
-                            </button>
-                            </h2>
-                            <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                            <div class="accordion-body">
-                                <strong>This is the first item's accordion body.</strong> It is shown by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-                            </div>
-                            </div>
-                        </div>
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="headingTwo">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                                Accordion Item #2
-                            </button>
-                            </h2>
-                            <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                            <div class="accordion-body">
-                                <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-                            </div>
-                            </div>
-                        </div>
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="headingThree">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                                Accordion Item #3
-                            </button>
-                            </h2>
-                            <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
-                            <div class="accordion-body">
-                                <strong>This is the third item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-                            </div>
-                            </div>
-                        </div>
-                        </div>
-                </div>
-                
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" onclick="showModalUploadBukti()">Balas</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                </div>
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDetailLabel">Detail Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="accordion" id="accordionExample"><!-- items diinject via JS --></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="showModalUploadBuktiPengerjaanKompen(window.__currentPenawaranId)">Balas</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+            </div>
 
             </div>
         </div>
     </div>
+
 
 </div>
 
@@ -382,7 +357,7 @@
         }, 5000);
 
         var table;
-        let reopenDetailAfterUpload = true;
+        let selectedId = null;
 
         $(document).ready(function () {
             const currentUserRole = "{{ auth()->user()->getRoleNames()->first() }}";
@@ -520,21 +495,21 @@
                                 } 
                                 else if (status === 'accept') {
                                     html += `
-                                    <button type="button" class="btn btn-info btn-sm" onclick="detailDataBuktiKompenPekerjaan(${full.id})">
+                                    <button type="button" class="btn btn-info btn-sm" onclick="detailDataBuktiKompenPekerjaan(${myPU.id})">
                                         <i class="fe fe-eye"></i> Detail
                                     </button>
                                     `;
 
                                     if (!filePath) {
                                     html += `
-                                        <button type="button" class="btn btn-primary btn-sm" onclick="uploadBuktiKonfirmasi(${myPU.id})">
+                                        <button type="button" class="btn btn-primary btn-sm" onclick="detailKompen(${myPU.id})">
                                         <i class="fe fe-upload"></i> Upload Bukti Konfirmasi
                                         </button>
                                     `;
                                     } else {
                                     html += `
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="downloadBukti('${myPU.id}')">
-                                        <i class="fe fe-download"></i> Download Bukti
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="detailKompen('${myPU.id}')">
+                                        <i class="fe fe-download"></i> Lihat Bukti Konfirmasi
                                         </button>
                                     `;
                                     }
@@ -570,76 +545,6 @@
             });
         });
 
-        function detailDataBuktiKompenPekerjaan(id) {
-            $('#modalDetailBuktiKompenPekerjaan').modal('show');
-        }
-
-        function showModalUploadBukti() {
-            const detailEl = document.getElementById('modalDetailBuktiKompenPekerjaan');
-            const uploadEl = document.getElementById('modalUploadBukti');
-
-            const detail = bootstrap.Modal.getOrCreateInstance(detailEl);
-            const upload = bootstrap.Modal.getOrCreateInstance(uploadEl);
-            detailEl.addEventListener('hidden.bs.modal', function handler() {
-            upload.show();
-            detailEl.removeEventListener('hidden.bs.modal', handler);
-            }, { once: true });
-
-            uploadEl.addEventListener('hidden.bs.modal', function handler() {
-            if (reopenDetailAfterUpload) {
-                detail.show();
-            }
-            uploadEl.removeEventListener('hidden.bs.modal', handler);
-            }, { once: true });
-
-            detail.hide();
-        }
-
-        function onUploadSuccess() {
-            reopenDetailAfterUpload = false;
-            bootstrap.Modal.getInstance(document.getElementById('modalUploadBukti')).hide();
-        }
-
-
-
-        function uploadBuktiRoleMahasiswa(id) {
-            $('#uploadBuktiId').val(id);
-
-            // Reset form
-            $('#file_bukti').val('');
-            $('#keterangan').val('');
-            $('#preview_upload_image').addClass('d-none').attr('src', '#');
-            $('#preview_upload_file').addClass('d-none').html('');
-
-            $.ajax({
-                url: `/portal/tugas-kompensasi/${id}/get-upload-mahasiswa`,
-                type: 'GET',
-                success: function (res) {
-                    if (res.success) {
-                        const fileUrl = res.data.file_url;
-                        const fileExt = fileUrl.split('.').pop().toLowerCase();
-                        const keterangan = res.data.keterangan || '';
-
-                        $('#keterangan').val(keterangan);
-
-                        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
-                            $('#preview_upload_image').attr('src', fileUrl).removeClass('d-none');
-                            $('#preview_upload_file').addClass('d-none').html('');
-                        } else {
-                            $('#preview_upload_file').removeClass('d-none').html(
-                                `<a href="${fileUrl}" target="_blank" class="text-primary">Lihat dokumen sebelumnya</a>`
-                            );
-                            $('#preview_upload_image').addClass('d-none').attr('src', '#');
-                        }
-                    }
-                },
-                error: function () {
-                    console.warn('Tidak ada data upload sebelumnya atau gagal mengambil data.');
-                }
-            });
-
-            $('#modalUploadBukti').modal('show');
-        }
 
         function showImagePreview(url) {
             $("#previewImage").attr("src", url);
@@ -648,6 +553,8 @@
 
         function detailData(id) {
             $('#modalDetailData').modal('show');
+
+            selectedId = id;
 
             if ($.fn.DataTable.isDataTable('#detailDatatable')) {
                 $('#detailDatatable').DataTable().destroy();
@@ -661,79 +568,353 @@
                 type: 'GET'
                 },
                 columns: [
-                { data: null, name: 'no', render: (d, t, r, m) => m.row + 1 },
-                { data: 'nim', name: 'nim' },
-                { data: 'nama_mahasiswa', name: 'nama_mahasiswa' },
-                { data: 'kelas', name: 'kelas' },
-                {
-                    data: 'id',
-                    name: 'aksi',
-                    orderable: false,
-                    searchable: false,
-                    render: function (data, type, full) {
-                    const status = (full.status || 'pending').toLowerCase();
-                    const urlBukti = full.bukti_konfirmasi_url;
-                    let html = `<div class="d-flex gap-1 flex-wrap">`;
+                    { data: null, name: 'no', render: (d, t, r, m) => m.row + 1 },
+                    { data: 'nim', name: 'nim' },
+                    { data: 'nama_mahasiswa', name: 'nama_mahasiswa' },
+                    { data: 'kelas', name: 'kelas' },
+                    {
+                        data: 'id',
+                        name: 'aksi',
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, full) {
+                        const status = (full.status || 'pending').toLowerCase();
+                        const urlBukti = full.bukti_konfirmasi_url;
+                        
+                        console.log(data);
+                        
+                        let html = `<div class="d-flex gap-1 flex-wrap">`;
 
-                    if (status === 'pending') {
-                        html += `
-                        <button class="btn btn-success btn-sm" onclick="terimaMahasiswa(${data})">
-                            <i class="fe fe-check"></i> Terima
-                        </button>
-                        <button class="btn btn-warning btn-sm" onclick="tolakMahasiswa(${data})">
-                            <i class="fe fe-x"></i> Tolak
-                        </button>
-                        `;
-                    } else if (status === 'accept') {
-                        html += `
-                        <button class="btn btn-primary btn-sm" onclick="uploadBuktiKonfirmasi(${data})">
-                            <i class="fe fe-upload"></i> Upload Bukti Konfirmasi
-                        </button>
-                        <button class="btn btn-outline-secondary btn-sm" ${urlBukti ? `onclick="downloadBukti('${urlBukti}')"` : 'disabled'}>
-                            <i class="fe fe-download"></i> Download Bukti
-                        </button>
-                        `;
-                    } else if (status === 'reject') {
-                        html += `<span class="badge bg-danger">Ditolak</span>`;
-                    }
+                        if (status === 'pending') {
+                            html += `
+                            <button class="btn btn-success btn-sm" onclick="terimaMahasiswa(${data})">
+                                <i class="fe fe-check"></i> Terima
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="tolakMahasiswa(${data})">
+                                <i class="fe fe-x"></i> Tolak
+                            </button>
+                            `;
+                        } else if (status === 'accept') {
+                            if (!urlBukti) {
+                                html += `<span class="badge bg-warning text-dark">Mahasiswa Belum Mengupload</span>`;
+                            } else {
+                                html += `
+                                <button class="btn btn-primary btn-sm" onclick="detailKompen(${data})">
+                                    <i class="fe fe-upload"></i> Detail Bukti Kompen
+                                </button>
+                                <button class="btn btn-info btn-sm" onclick="detailDataBuktiKompenPekerjaan('${data}')">
+                                    <i class="fe fe-download"></i> Detail pengerjaan kompen
+                                </button>
+                                `;
+                            }
+                        } else if (status === 'reject') {
+                            html += `<span class="badge bg-danger">Ditolak</span>`;
+                        }
 
-                    html += `</div>`;
-                    return html;
+                        html += `</div>`;
+                        return html;
+                        }
                     }
-                }
                 ]
             });
         }
 
-        function uploadBuktiDosen(id) {
+        $('#btnKonfirmasi').on('click', function() {
+
+            $('#modalDetailData').modal('hide');
+            console.log(selectedId);
+            
+                if (selectedId) {
+                    setTimeout(() => {
+                    Swal.fire({
+                        title: 'Apakah Anda yakin ingin menyelesaikan tugas kompen ini ?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya!',
+                        cancelButtonText: 'Tidak',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: `/portal/tugas-kompensasi/${selectedId}/detail/konfirmasi-kompensasi`,
+                                type: 'POST',
+                                data: {
+                                    id: selectedId
+                                },
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function (response) {
+                                    if (response.status) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Berhasil',
+                                            text: response.message,
+                                            timer: 2000,
+                                            showConfirmButton: false
+                                        });
+
+                                        $('#datatable').DataTable().ajax.reload();
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Gagal',
+                                            text: response.message
+                                        });
+
+                                        $('#modalDetailData').modal('show');
+                                    }
+                                },
+                                error: function (xhr) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Gagal',
+                                        text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghapus data.'
+                                    });
+
+                                    $('#modalDetailData').modal('show');
+                                }
+                            });
+                        } else {
+                            $('#modalDetailData').modal('show');
+                        }
+                    });
+                }, 300);
+            }
+            
+        });
+
+
+        function isImageExt(ext) {
+            return ['jpg','jpeg','png','gif','webp','bmp','svg'].includes((ext || '').toLowerCase());
+        }
+
+        function escapeHtml(s) {
+            return String(s || '')
+                .replace(/&/g,'&amp;')
+                .replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;')
+                .replace(/'/g,'&#039;');
+        }
+
+        function detailDataBuktiKompenPekerjaan(penawaranId) {
+            
+            const $modal   = $('#modalDetailBuktiKompenPekerjaan');
+            const $acc     = $modal.find('#accordionExample');
+
+            window.__currentPenawaranId = penawaranId;
+
+            $acc.empty();
+            $modal.find('#modalDetailLabel').text('Detail Data');
+
+            $modal.modal('show');
+
+            $.ajax({
+                url: `/portal/tugas-kompensasi/${penawaranId}/files`,
+                type: 'GET',
+                success: function(res) {
+                    console.log(res);
+                    
+                if (!res.success || !Array.isArray(res.data) || res.data.length === 0) {
+                    $acc.html(`<div class="text-muted">Belum ada bukti yang diunggah.</div>`);
+                    return;
+                }
+
+                res.data.forEach((item, idx) => {
+                    const first = escapeHtml(item.first_name);
+                    const last  = escapeHtml(item.last_name);
+                    const nama  = (first + ' ' + last).trim() || 'Tanpa Nama';
+                    const collapseId = `collapse-file-${item.id || idx}`;
+                    const headingId  = `heading-file-${item.id || idx}`;
+
+                    let bodyInner = '';
+                    if (item.file_url) {
+                    if (isImageExt(item.extension) || isImageExt(item.file_url.split('.').pop())) {
+                        bodyInner += `
+                        <div class="mb-2">
+                            <img src="${item.file_url}" alt="bukti" class="img-fluid rounded" style="max-height:240px;">
+                        </div>`;
+                    } else {
+                        bodyInner += `
+                        <div class="mb-2">
+                            <a href="${item.file_url}" target="_blank" class="btn btn-sm btn-primary">Lihat Dokumen</a>
+                        </div>`;
+                    }
+                    } else {
+                    bodyInner += `<div class="text-muted mb-2">File tidak tersedia.</div>`;
+                    }
+
+                    bodyInner += `
+                    <div><strong>Keterangan:</strong> ${escapeHtml(item.keterangan) || '-'}</div>
+                    ${item.created_at ? `<div class="text-muted small mt-1">Diunggah: ${escapeHtml(item.created_at)}</div>` : '' }
+                    `;
+
+                    const itemHtml = `
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="${headingId}">
+                        <button class="accordion-button ${idx === 0 ? '' : 'collapsed'}" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#${collapseId}"
+                                aria-expanded="${idx === 0 ? 'true' : 'false'}" aria-controls="${collapseId}">
+                            ${nama}
+                        </button>
+                        </h2>
+                        <div id="${collapseId}" class="accordion-collapse collapse ${idx === 0 ? 'show' : ''}"
+                            aria-labelledby="${headingId}" data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                            ${bodyInner}
+                        </div>
+                        </div>
+                    </div>
+                    `;
+
+                    $acc.append(itemHtml);
+                });
+
+                $modal.find('#modalDetailLabel').text(`Detail Data (${res.data.length} file)`);
+                },
+                error: function() {
+                    $acc.html(`<div class="text-danger">Gagal mengambil data bukti.</div>`);
+                }
+            });
+        }
+
+        function showModalUploadBuktiPengerjaanKompen(penawaranId) {
+            const $detail = $('#modalDetailBuktiKompenPekerjaan');
+            const $upload = $('#modalUploadBukti');
+            const detailModal = bootstrap.Modal.getOrCreateInstance($detail[0]);
+            const uploadModal = bootstrap.Modal.getOrCreateInstance($upload[0]);
+
+            resetUploadModal();
+            $('#uploadBuktiId').val(penawaranId);
+            $('#uploadTarget').val('buktiPengerjaanKompen');
+            
+            $detail.off('.swap');
+            $upload.off('.swap');
+
+            $detail.one('hidden.bs.modal', () => {
+                uploadModal.show();
+            });
+
+            detailModal.hide();
+        }
+
+        function resetUploadModal() {
+            const $m = $('#modalUploadBukti');
+            const f = $m.find('form')[0];
+            if (f) f.reset();
+            $m.find('#uploadBuktiId').val('');
+            $m.find('#preview_upload_image').addClass('d-none').attr('src', '#');
+            $m.find('#preview_upload_file').addClass('d-none').html('');
+            $m.find('#statusBadge').remove();
+            $m.find('.modal-title').text('Upload Bukti Pengerjaan Kompensasi');
+        }
+
+        function terimaMahasiswa(id) {
+            $('#modalDetailData').modal('hide');
+
+            setTimeout(() => {
+                Swal.fire({
+                    title: 'Terima Mahasiswa?',
+                    text: "Kuota akan berkurang setelah Anda menerima.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya!',
+                    cancelButtonText: 'Tidak',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                           url: `/portal/tugas-kompensasi/detail/${id}/accept`,
+                            type: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function (response) {
+                                if (response.status) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil',
+                                        text: response.message,
+                                        timer: 2000,
+                                        showConfirmButton: false
+                                    });
+
+                                    $('#detailDatatable').DataTable().ajax.reload(null, false);
+                                    $('#datatable').DataTable().ajax.reload(null, false);
+                                } else {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Gagal',
+                                        text: response.message
+                                    });
+
+                                    $('#modalDetailData').modal('show');
+                                }
+                            },
+                            error: function (xhr) {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal',
+                                    text: xhr.responseJSON?.message || 'Terjadi kesalahan saat menghapus data.'
+                                });
+
+                                $('#modalDetailData').modal('show');
+                            }
+                        });
+                    } else {
+                        $('#modalDetailData').modal('show');
+                    }
+                });
+            }, 300);
+        }
+
+        function detailKompen(id) {
+            const $modal = $('#modalUploadBukti');
+            const $badge = $modal.find('#statusBadge');
+
+            $('#uploadTarget').val('buktiKompensasi'); 
+
+            $badge.text('Null').attr('class', 'badge bg-secondary ms-2');
+            
             $('#uploadBuktiId').val(id);
 
-            // Reset form
             $('#file_bukti').val('');
             $('#keterangan').val('');
             $('#preview_upload_image').addClass('d-none').attr('src', '#');
             $('#preview_upload_file').addClass('d-none').html('');
 
             $.ajax({
-                url: `/portal/tugas-kompensasi/${id}/get-upload-dosen`,
+                url: `/portal/tugas-kompensasi/${id}/download-bukti`,
                 type: 'GET',
                 success: function (res) {
-                    if (res.success) {
+                    const status = (res?.data?.file_status || '').trim(); 
+                    const keterangan = res.data.keterangan || '';
+
+                    $('#keterangan').val(keterangan);
+                    if (status === 'created') {
+                        $badge.text('Belum Dilihat').attr('class', 'badge bg-danger ms-2');
+                    } else if (status === 'edited') {
+                        $badge.text('Sudah Dilihat').attr('class', 'badge bg-success ms-2');
+                    } else {
+                        $badge.text('Status Tidak Diketahui').attr('class', 'badge bg-secondary ms-2');
+                    }
+
+                    if (res.status && res.data.file_url) {
                         const fileUrl = res.data.file_url;
-                        const fileExt = fileUrl.split('.').pop().toLowerCase();
-                        const keterangan = res.data.keterangan || '';
+                        const ext = (res.data.extension || fileUrl.split('.').pop() || '').toLowerCase();
 
-                        $('#keterangan').val(keterangan);
-
-                        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(fileExt)) {
-                            $('#preview_upload_image').attr('src', fileUrl).removeClass('d-none');
-                            $('#preview_upload_file').addClass('d-none').html('');
+                        if (['jpg','jpeg','png','gif','webp'].includes(ext)) {
+                            $modal.find('#preview_upload_image').attr('src', fileUrl).removeClass('d-none');
+                            $modal.find('#preview_upload_file').addClass('d-none').html('');
                         } else {
-                            $('#preview_upload_file').removeClass('d-none').html(
-                                `<a href="${fileUrl}" target="_blank" class="text-primary">Lihat dokumen sebelumnya</a>`
+                            $modal.find('#preview_upload_file').removeClass('d-none').html(
+                                `<a href="${fileUrl}" target="_blank" class="text-primary">Lihat dokumen</a>`
                             );
-                            $('#preview_upload_image').addClass('d-none').attr('src', '#');
+                            $modal.find('#preview_upload_image').addClass('d-none').attr('src', '#');
                         }
+                    } else {
+                        console.warn('File URL tidak ditemukan');
                     }
                 },
                 error: function () {
@@ -743,7 +924,6 @@
 
             $('#modalUploadBukti').modal('show');
         }
-
 
         $('#file_bukti').on('change', function() {
             const file = this.files[0];
@@ -771,6 +951,9 @@
             e.preventDefault();
 
             const formData = new FormData(this);
+            const id = $('#uploadBuktiId').val();
+            const target = $('#uploadTarget').val(); 
+            formData.append('target', target);
             const modalEl = document.getElementById('modalUploadBukti');
             const modalInstance = bootstrap.Modal.getInstance(modalEl);
 
@@ -787,7 +970,7 @@
                 });
 
                 $.ajax({
-                    url: "{{ route('tugas-kompensasi.upload.bukti') }}",
+                    url: `/portal/tugas-kompensasi/${id}/upload-bukti`,
                     type: "POST",
                     data: formData,
                     processData: false,
@@ -808,7 +991,7 @@
                         });
 
                         $("#formUploadBukti")[0].reset();
-                        $('#detailDatatable').DataTable().ajax.reload();
+                        $('#datatable').DataTable().ajax.reload();
                     },
                     error: function(xhr) {
                         let message = 'Terjadi kesalahan saat menyimpan data.';
@@ -847,8 +1030,8 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/portal/tugas-kompensasi/detail/${id}`,
-                            type: 'DELETE',
+                            url: `/portal/tugas-kompensasi/detail/${id}/reject`,
+                            type: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                             },
@@ -1033,27 +1216,21 @@
                         $('#edit_jumlah_menit').val(tugasKompensasi.jumlah_menit_kompensasi);
                         $('#edit_deskripsi').val(tugasKompensasi.deskripsi_kompensasi);
 
-                        // Cek apakah ada file yang diupload
                         if (tugasKompensasi.file_path) {
                             const fileExtension = tugasKompensasi.file_path.split('.').pop().toLowerCase();
                             const fileUrl = `{{ asset('storage') }}/${tugasKompensasi.file_path}`;
                             
-                            // Menyesuaikan tampilan berdasarkan jenis file
                             if (['jpeg', 'png', 'jpg', 'webp'].includes(fileExtension)) {
-                                // Jika gambar, tampilkan gambar
                                 $("#preview_edit_image").attr("src", fileUrl).removeClass("d-none");
                                 $("#preview_edit_image").show();
-                                $("#preview_edit_file").hide(); // Sembunyikan preview file lainnya
+                                $("#preview_edit_file").hide();
                             } else if (['pdf'].includes(fileExtension)) {
-                                // Jika PDF, tampilkan tombol untuk membuka PDF
                                 $("#preview_edit_image").hide();
                                 $("#preview_edit_file").html(`<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-secondary">Buka PDF</a>`).removeClass("d-none");
                             } else if (['doc', 'docx'].includes(fileExtension)) {
-                                // Jika Word, tampilkan tombol untuk membuka Word
                                 $("#preview_edit_image").hide();
                                 $("#preview_edit_file").html(`<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-primary">Buka Word</a>`).removeClass("d-none");
                             } else if (['xls', 'xlsx'].includes(fileExtension)) {
-                                // Jika Excel, tampilkan tombol untuk membuka Excel
                                 $("#preview_edit_image").hide();
                                 $("#preview_edit_file").html(`<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-success">Buka Excel</a>`).removeClass("d-none");
                             } else {
@@ -1199,7 +1376,6 @@
                 }
             });
         }
-
 
         </script>
 

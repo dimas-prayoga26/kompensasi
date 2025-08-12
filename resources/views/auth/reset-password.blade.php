@@ -62,10 +62,11 @@
                 <div class="card">
                     <div class="card-body">
 
-                        <div class="app-brand justify-content-center">
-                            <a href="{{ route('mahasiswa.login') }}" class="app-brand-link gap-2">
+                        <div class="app-brand justify-content-center d-flex flex-column align-items-center">
+                            <a href="{{ route('mahasiswa.login') }}" class="app-brand-link mb-2">
                                 <img src="{{ asset('images/polindra.png') }}" alt="Logo" width="75" />
                             </a>
+                            <span class="app-brand-text demo text-body fw-bolder" style="text-transform: uppercase;">E-KOMPEN</span>
                         </div>
 
                         @if (session('success'))

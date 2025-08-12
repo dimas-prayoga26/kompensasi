@@ -31,7 +31,7 @@ class UserSeeder extends Seeder
                 'email' => 'superadmin@gmail.com',
                 'password' => '1111111',
                 'nim' => '1111111',
-                'nip' => null,
+                'nip' => '1111111',
                 'role' => 'superAdmin',
             ],
             [
