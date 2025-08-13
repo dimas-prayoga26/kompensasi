@@ -379,9 +379,10 @@
                     {
                         targets: 3,
                         render: function (data, type, full, meta) {
+                            console.log(full);
                             
                             if (isDosen) {
-                                return full.detail_dosen?.jabatan_fungsional ?? '<span class="badge bg-danger">Data belum lengkap</span>';
+                                return full.detail_dosen?.jabatan_fungsional?.nama_jabatan ?? '<span class="badge bg-danger">Data belum lengkap</span>';
                             } else {
                                 const detailMahasiswa = full.detail_mahasiswa;
                                 const kelasSemester = full.kelas_semester_mahasiswas;
@@ -409,7 +410,7 @@
                         targets: 5,
                         render: function (data, type, full, meta) {
                             return isDosen
-                                ? (full.detail_dosen?.bidang_keahlian ?? '<span class="badge bg-danger">Data belum lengkap</span>')
+                                ? (full.detail_dosen?.bidang_keahlian?.nama_keahlian ?? '<span class="badge bg-danger">Data belum lengkap</span>')
                                 : (full.detail_mahasiswa?.prodi?.nama ?? '<span class="badge bg-danger">Data belum lengkap</span>');
                         }
                     },

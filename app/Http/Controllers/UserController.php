@@ -315,8 +315,9 @@ class UserController extends Controller
         $query = User::with([
             'roles',
             'detailMahasiswa.prodi',
-            'detailDosen',
-            'kelasSemesterMahasiswas'  // Pastikan relasi ini dimuat
+            'detailDosen.bidangKeahlian',        // relasi ke tabel bidang_keahlian
+            'detailDosen.jabatanFungsional',    // relasi ke tabel jabatan_fungsional
+            'kelasSemesterMahasiswas'
         ])->whereHas('roles', function ($q) use ($role) {
             $q->whereIn('name', ['Mahasiswa', 'Dosen']);
             if ($role) {
@@ -326,26 +327,40 @@ class UserController extends Controller
 
         return datatables()->eloquent($query)
             ->addColumn('nama_lengkap', function ($user) {
-                $detail = $user->detailMahasiswa;
-                return trim(($detail->first_name ?? '') . ' ' . ($detail->last_name ?? ''));
+                $detailMhs = $user->detailMahasiswa;
+                $detailDsn = $user->detailDosen;
+
+                if ($detailMhs) {
+                    return trim(($detailMhs->first_name ?? '') . ' ' . ($detailMhs->last_name ?? ''));
+                } elseif ($detailDsn) {
+                    return trim(($detailDsn->first_name ?? '') . ' ' . ($detailDsn->last_name ?? ''));
+                }
+                return '';
             })
             ->addColumn('kolom4', function ($user) {
-                // Cek apakah detailMahasiswa dan kelasSemesterMahasiswas ada
-                $tahunMasuk = $user->detailMahasiswa ? $user->detailMahasiswa->tahun_masuk : null;
-                $statusAktif = $user->kelasSemesterMahasiswas ? ($user->kelasSemesterMahasiswas->is_active == 1 ? 'Aktif' : 'Lulus') : 'Data Tidak Tersedia';
-                
-                // Gabungkan keduanya dalam format yang diinginkan
-                return "{$tahunMasuk} ({$statusAktif})";
+                if ($user->detailDosen) {
+                    // Ambil nama jabatan fungsional
+                    return $user->detailDosen->jabatanFungsional->nama_jabatan ?? '<span class="badge bg-danger">Data belum lengkap</span>';
+                }
+
+                if ($user->detailMahasiswa && $user->kelasSemesterMahasiswas) {
+                    $tahunMasuk = $user->detailMahasiswa->tahun_masuk;
+                    $statusAktif = $user->kelasSemesterMahasiswas->is_active == 1 ? 'Aktif' : 'Lulus';
+                    return "{$tahunMasuk} ({$statusAktif})";
+                }
+
+                return '<span class="badge bg-danger">Data belum lengkap</span>';
             })
             ->addColumn('kolom5', function ($user) {
-                return $user->detailMahasiswa->kelas ?? null;
-            })
-            ->addColumn('kolom6', function ($user) {
-                return $user->detailMahasiswa->prodi->nama ?? null;
+                if ($user->detailDosen) {
+                    // Ambil nama bidang keahlian
+                    return $user->detailDosen->bidangKeahlian->nama_keahlian ?? '<span class="badge bg-danger">Data belum lengkap</span>';
+                }
+                return $user->detailMahasiswa->prodi->nama ?? '<span class="badge bg-danger">Data belum lengkap</span>';
             })
             ->make(true);
+    }
 
-            }
 
 
     public function select2Kelas(Request $request)
