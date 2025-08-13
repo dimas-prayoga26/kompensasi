@@ -139,15 +139,30 @@
                         @if(auth()->user()->hasRole('Dosen'))
                             <div class="mb-3 col-md-6">
                                 <label for="jabatan_fungsional" class="form-label">Jabatan Fungsional</label>
-                                <input class="form-control" type="text" name="jabatan_fungsional"
-                                    value="{{ optional(auth()->user()->detailDosen)->jabatan_fungsional }}" />
+                                <select class="form-control" name="jabatan_fungsional_id">
+                                    <option value="">Pilih Jabatan Fungsional</option>
+                                    @foreach($jabatanFungsionalList as $jabatan)
+                                        <option value="{{ $jabatan->id }}"
+                                                {{ optional(auth()->user()->detailDosen)->jabatan_fungsional_id == $jabatan->id ? 'selected' : '' }}>
+                                            {{ $jabatan->nama_jabatan }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="mb-3 col-md-6">
                                 <label for="bidang_keahlian" class="form-label">Bidang Keahlian</label>
-                                <input class="form-control" type="text" name="bidang_keahlian"
-                                    value="{{ optional(auth()->user()->detailDosen)->bidang_keahlian }}" />
+                                <select class="form-control" name="bidang_keahlian_id">
+                                    <option value="">Pilih Bidang Keahlian</option>
+                                    @foreach($bidangKeahlianList as $bidang)
+                                        <option value="{{ $bidang->id }}"
+                                                {{ optional(auth()->user()->detailDosen)->bidang_keahlian_id == $bidang->id ? 'selected' : '' }}>
+                                            {{ $bidang->nama_keahlian }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         @endif
+
                     </div>
 
                     <div class="mt-2 d-flex align-items-center">

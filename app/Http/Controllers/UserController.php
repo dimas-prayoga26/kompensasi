@@ -9,7 +9,9 @@ use App\Models\Semester;
 use App\Models\DetailDosen;
 use App\Imports\UsersImport;
 use Illuminate\Http\Request;
+use App\Models\BidangKeahlian;
 use App\Models\DetailMahasiswa;
+use App\Models\JabatanFungsional;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\KelasSemesterMahasiswa;
@@ -138,7 +140,13 @@ class UserController extends Controller
         try {
             DB::beginTransaction();
 
-            $user = User::with(['roles', 'detailMahasiswa.prodi', 'detailDosen', 'kelasSemesterMahasiswas'])->find($id);
+            $user = User::with([
+                'roles', 
+                'detailMahasiswa.prodi', 
+                'detailDosen.jabatanFungsional',
+                'detailDosen.bidangKeahlian', 
+                'kelasSemesterMahasiswas'
+            ])->find($id);
 
             if (!$user) {
                 DB::rollBack();
@@ -148,11 +156,16 @@ class UserController extends Controller
                 ], 404);
             }
 
+            $jabatanFungsionalList = JabatanFungsional::all();
+            $bidangKeahlianList = BidangKeahlian::all();
+
             DB::commit();
 
             return response()->json([
                 'status' => true,
-                'data' => $user
+                'data' => $user,
+                'jabatanFungsionalList' => $jabatanFungsionalList,
+                'bidangKeahlianList' => $bidangKeahlianList
             ]);
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -162,6 +175,8 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+
 
 
     public function edit(string $id)
@@ -214,8 +229,8 @@ class UserController extends Controller
                     'first_name' => 'required|string|max:255',
                     'last_name' => 'nullable|string|max:255',
                     'jenis_kelamin' => 'required|in:Laki-laki,Perempuan',
-                    'jabatan_fungsional' => 'nullable|string|max:255',
-                    'bidang_keahlian' => 'nullable|string|max:255',
+                    'jabatan_fungsional_id' => 'nullable|exists:jabatan_fungsionals,id', // Validasi ID jabatan fungsional
+                    'bidang_keahlian_id' => 'nullable|exists:bidang_keahlians,id', // Validasi ID bidang keahlian
                 ]);
 
                 $detail = $user->detailDosen;
@@ -233,10 +248,9 @@ class UserController extends Controller
                     'first_name' => $request->input('first_name'),
                     'last_name' => $request->input('last_name'),
                     'jenis_kelamin' => $request->input('jenis_kelamin'),
-                    'jabatan_fungsional' => $request->input('jabatan_fungsional'),
-                    'bidang_keahlian' => $request->input('bidang_keahlian'),
+                    'jabatan_fungsional_id' => $request->input('jabatan_fungsional_id'), // Update dengan ID jabatan fungsional
+                    'bidang_keahlian_id' => $request->input('bidang_keahlian_id'), // Update dengan ID bidang keahlian
                 ]);
-
             } else {
                 throw new \Exception("Role user tidak valid.");
             }

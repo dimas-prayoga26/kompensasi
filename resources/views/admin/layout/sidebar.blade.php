@@ -50,7 +50,9 @@
                 request()->routeIs('mataKuliah.*') ||
                 request()->routeIs('kelas.*') ||
                 request()->routeIs('semester.*') ||
-                request()->routeIs('prodi.*') ? 'active open' : '' }}">
+                request()->routeIs('prodi.*') ||
+                request()->routeIs('bidang-keahlian.*') ||
+                request()->routeIs('jabatan-fungsional.*') ? 'active open' : '' }}">
                 <a href="javascript:void(0);" class="menu-link menu-toggle">
                     <i class="menu-icon tf-icons bx bx-cog"></i>
                     <div data-i18n="Form Layouts">Settings</div>
@@ -79,6 +81,16 @@
                     <li class="menu-item {{ request()->routeIs('prodi.*') ? 'active' : '' }}">
                         <a href="{{ route('prodi.index') }}" class="menu-link">
                             <div data-i18n="Horizontal Form">Prodi</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('bidang-keahlian.*') ? 'active' : '' }}">
+                        <a href="{{ route('bidang-keahlian.index') }}" class="menu-link">
+                            <div data-i18n="Horizontal Form">Bidang Keahlian</div>
+                        </a>
+                    </li>
+                    <li class="menu-item {{ request()->routeIs('jabatan-fungsional.*') ? 'active' : '' }}">
+                        <a href="{{ route('jabatan-fungsional.index') }}" class="menu-link">
+                            <div data-i18n="Horizontal Form">Jabatan Fungsional</div>
                         </a>
                     </li>
                 </ul>

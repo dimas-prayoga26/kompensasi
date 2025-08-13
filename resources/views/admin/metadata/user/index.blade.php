@@ -617,8 +617,10 @@
                 success: function (response) {
                     if (response.status === true) {
                         const user = response.data;
+                        const jabatanFungsionalList = response.jabatanFungsionalList;
+                        const bidangKeahlianList = response.bidangKeahlianList;
 
-                        console.log(user.roles[0].name === 'Dosen');
+                        console.log(response);
                         
 
                         const $modalBody = $('#modalEditData .modal-body');
@@ -679,10 +681,9 @@
                                     </select>
                                 </div>
                             `);
-                        } else if (user.id   && user.roles[0].name === 'Dosen') {
+                        } else if (user.id && user.roles[0].name === 'Dosen') {
                             modalTitle = 'Edit Data Dosen';
 
-                            // Tambahkan form input untuk data dosen
                             $modalBody.append(`
                                 <div class="mb-3">
                                     <label for="nip" class="form-label">NIP</label>
@@ -705,15 +706,28 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="jabatan_fungsional" class="form-label">Jabatan Fungsional</label>
-                                    <input type="text" class="form-control" id="jabatan_fungsional" name="jabatan_fungsional" value="${user.detail_dosen?.jabatan_fungsional ?? ''}">
+                                    <select class="form-select" id="jabatan_fungsional" name="jabatan_fungsional_id">
+                                        <!-- Looping melalui jabatanFungsionalList -->
+                                        ${jabatanFungsionalList.map(jabatan => `
+                                            <option value="${jabatan.id}" ${user.detail_dosen?.jabatan_fungsional_id == jabatan.id ? 'selected' : ''}>
+                                                ${jabatan.nama_jabatan}
+                                            </option>
+                                        `).join('')}
+                                    </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="bidang_keahlian" class="form-label">Bidang Keahlian</label>
-                                    <input type="text" class="form-control" id="bidang_keahlian" name="bidang_keahlian" value="${user.detail_dosen?.bidang_keahlian ?? ''}">
+                                    <select class="form-select" id="bidang_keahlian" name="bidang_keahlian_id">
+                                        <!-- Looping melalui bidangKeahlianList -->
+                                        ${bidangKeahlianList.map(bidang => `
+                                            <option value="${bidang.id}" ${user.detail_dosen?.bidang_keahlian_id == bidang.id ? 'selected' : ''}>
+                                                ${bidang.nama_keahlian}
+                                            </option>
+                                        `).join('')}
+                                    </select>
                                 </div>
                             `);
                         } else {
-                            // Jika data tidak lengkap atau role tidak dikenali
                             $modalBody.append(`<p>Data tidak lengkap atau role tidak dikenali.</p>`);
                         }
 

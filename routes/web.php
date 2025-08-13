@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BidangKeahlianController;
 use App\Models\MatakuliahSemester;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -10,9 +11,12 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\JabatanFungsionalController;
 use App\Http\Controllers\MataKuliahController;
 use App\Http\Controllers\TugasKompensasiController;
 use App\Http\Controllers\MatakuliahDiampuController;
+use App\Models\BidangKeahlian;
+use App\Models\JabatanFungsional;
 
 Route::redirect('', '/login');
 
@@ -76,6 +80,12 @@ Route::middleware(['web', 'auth'])->group(function () {
 
         Route::get("/kelas/datatable", [KelasController::class, "datatable"])->name("kelas.datatable");
         Route::resource('kelas', KelasController::class);
+
+        Route::get("/bidang-keahlian/datatable", [BidangKeahlianController::class, "datatable"])->name("bidang-keahlian.datatable");
+        Route::resource('bidang-keahlian', BidangKeahlianController::class);
+
+        Route::get("/jabatan-fungsional/datatable", [JabatanFungsionalController::class, "datatable"])->name("jabatan-fungsional.datatable");
+        Route::resource('jabatan-fungsional', JabatanFungsionalController::class);
 
         Route::get("/semester/datatable", [SemesterController::class, "datatable"])->name("semester.datatable");
         Route::resource('semester', SemesterController::class);

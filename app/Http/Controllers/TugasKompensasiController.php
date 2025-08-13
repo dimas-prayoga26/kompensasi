@@ -24,9 +24,11 @@ class TugasKompensasiController extends Controller
             ->with('detailDosen:id,user_id,first_name,last_name')
             ->get();
 
-        $tugasKompensasis = TugasKompensasi::select('id', 'status')->get();
+        $tugasKompensasi = TugasKompensasi::first(); // Mengambil entri pertama
 
-        return view('admin.tugas_kompen.index', compact('tugasKompensasis', 'dosens'));
+        // dd($tugasKompensasi);
+
+        return view('admin.tugas_kompen.index', compact('tugasKompensasi', 'dosens'));
     }
     
     public function create()

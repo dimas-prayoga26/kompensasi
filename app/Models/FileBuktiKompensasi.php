@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class FileBuktiKompensasi extends Model
 {
-     protected $keyType = 'string';
+    protected $keyType = 'string';
 
     protected $guarded = [''];
 

@@ -14,4 +14,15 @@ class DetailDosen extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    public function jabatanFungsional()
+    {
+        return $this->belongsTo(JabatanFungsional::class, 'jabatan_fungsional_id');
+    }
+
+    // Relasi ke Bidang Keahlian
+    public function bidangKeahlian()
+    {
+        return $this->belongsTo(BidangKeahlian::class, 'bidang_keahlian_id');
+    }
 }

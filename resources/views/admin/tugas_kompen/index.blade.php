@@ -225,10 +225,17 @@
                 <div class="modal-header d-flex justify-content-between align-items-center">
                     <h5 class="modal-title d-flex align-items-center">
                         Detail Mahasiswa Kompensasi
-                        <button type="button" class="btn btn-success ms-3" id="btnKonfirmasi">
-                            Konfirmasi
-                        </button>
+                        @if($tugasKompensasi && $tugasKompensasi->status == 'open')
+                            <button type="button" class="btn btn-success ms-3" id="btnKonfirmasi">
+                                Konfirmasi
+                            </button>
+                        @elseif($tugasKompensasi && $tugasKompensasi->status == 'closed')
+                            <span class="badge bg-danger ms-3">
+                                Tugas Kompensasi Ini Sudah Di Tutup
+                            </span>
+                        @endif
                     </h5>
+
                     <div>
                         <!-- Button Konfirmasi -->
 
@@ -800,15 +807,27 @@
         }
 
         function resetUploadModal() {
+            const currentUserRole = "{{ auth()->user()->getRoleNames()->first() }}"; // Mendapatkan role pengguna saat ini
             const $m = $('#modalUploadBukti');
             const f = $m.find('form')[0];
+            
+            // Reset form jika ada
             if (f) f.reset();
+            
+            // Reset beberapa elemen di dalam modal
             $m.find('#uploadBuktiId').val('');
             $m.find('#preview_upload_image').addClass('d-none').attr('src', '#');
             $m.find('#preview_upload_file').addClass('d-none').html('');
             $m.find('#statusBadge').remove();
-            $m.find('.modal-title').text('Upload Bukti Pengerjaan Kompensasi');
+            
+
+            if (currentUserRole === 'Dosen' || currentUserRole === 'superAdmin') {
+                $m.find('.modal-title').text('Berikan tanggapan');
+            } else if (currentUserRole === 'Mahasiswa') {
+                $m.find('.modal-title').text('Upload Bukti Pengerjaan Kompensasi');
+            }
         }
+
 
         function terimaMahasiswa(id) {
             $('#modalDetailData').modal('hide');
@@ -825,7 +844,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                           url: `/portal/tugas-kompensasi/detail/${id}/accept`,
+                           url: `/portal/tugas-kompensasi/${id}/detail/accept`,
                             type: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -1030,7 +1049,7 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $.ajax({
-                            url: `/portal/tugas-kompensasi/detail/${id}/reject`,
+                            url: `/portal/tugas-kompensasi/${id}/detail/reject`,
                             type: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

@@ -8,8 +8,10 @@ use App\Models\Prodi;
 use App\Models\DetailUser;
 use App\Models\DetailDosen;
 use Illuminate\Support\Str;
+use App\Models\BidangKeahlian;
 use App\Models\DetailMahasiswa;
 use Illuminate\Database\Seeder;
+use App\Models\JabatanFungsional;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 
@@ -160,31 +162,49 @@ class UserSeeder extends Seeder
             ['nama' => 'Vera Wati, M.Kom.', 'nip' => '199409032024062002'],
         ];
 
-        foreach ($dosenData as $dosen) {
-            $nameParts = explode(', ', $dosen['nama']);
-            
-            $firstName = explode(' ', $nameParts[0])[0];
-            
-            $lastName = implode(' ', array_slice(explode(' ', $nameParts[0]), 1)) . ', ' . $nameParts[1] ?? '';
+        $bidangKeahlianList = BidangKeahlian::all();
 
-            $email = strtolower($firstName . '_' . explode(' ', $lastName)[0]) . '@polindra.co.id'; 
+        $jumlahBidangKeahlian = count($bidangKeahlianList);
 
-           $user = User::create([
-                'email' => $email,
-                'nip' => $dosen['nip'],
-                'password' => bcrypt($dosen['nip']),
-            ]);
+        $dosenPerBidang = ceil(count($dosenData) / $jumlahBidangKeahlian);
 
-            $user->assignRole('Dosen'); 
+        $jabatanFungsionalKetua = JabatanFungsional::firstOrCreate(['nama_jabatan' => 'Ketua']);
+        $jabatanFungsionalAnggota = JabatanFungsional::firstOrCreate(['nama_jabatan' => 'Anggota']);
 
-            DetailDosen::create([
-                'user_id' => $user->id,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'jenis_kelamin' => null,
-                'jabatan_fungsional' => null,
-                'bidang_keahlian' => null,
-            ]);
+        $dosenIndex = 0;
+
+        foreach ($bidangKeahlianList as $index => $bidangKeahlian) {
+            $dosenForThisBidang = array_slice($dosenData, $dosenIndex, $dosenPerBidang);
+
+            foreach ($dosenForThisBidang as $dosenIndexInBidang => $dosen) {
+                // Pisahkan nama depan dan belakang
+                $nameParts = explode(', ', $dosen['nama']);
+                $firstName = explode(' ', $nameParts[0])[0];
+                $lastName = implode(' ', array_slice(explode(' ', $nameParts[0]), 1)) . ', ' . ($nameParts[1] ?? '');
+
+                $email = strtolower($firstName . '_' . explode(' ', $lastName)[0]) . '@polindra.co.id'; 
+
+                $user = User::create([
+                    'email' => $email,
+                    'nip' => $dosen['nip'],
+                    'password' => bcrypt($dosen['nip']),
+                ]);
+
+                $user->assignRole('Dosen'); 
+
+                $jabatanFungsional = ($dosenIndexInBidang == 0) ? $jabatanFungsionalKetua : $jabatanFungsionalAnggota;
+
+                DetailDosen::create([
+                    'user_id' => $user->id,
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'jenis_kelamin' => null, 
+                    'jabatan_fungsional_id' => $jabatanFungsional->id,
+                    'bidang_keahlian_id' => $bidangKeahlian->id,
+                ]);
+            }
+
+            $dosenIndex += $dosenPerBidang;
         }
     }
 
